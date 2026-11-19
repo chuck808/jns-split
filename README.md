@@ -19,7 +19,7 @@ Implemented:
 
 ## VS Code
 
-Use Node.js 22.12+ (Node 24 supported) and npm. Open this folder in VS Code; accept the Svelte and Tailwind extension recommendations.
+Use Node.js 22.17+ (Node 24 supported) and npm. Open this folder in VS Code; accept the Svelte and Tailwind extension recommendations.
 
 ```sh
 npm ci

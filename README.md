@@ -19,6 +19,10 @@ Bench simulator features:
 
 **Use fictional records during testing.** The simulator at `/bench` keeps its data in the current browser tab and loses it on refresh; exports are labelled SIMULATED. The separate `/club` register persists to Supabase when configured. Neither is connected to live timing or controller acknowledgement. The Core2 does not claim lane acceptance.
 
+## Club workspace
+
+The club landing page now shows real registry totals and recent changes. Rider management has moved to its own searchable, paginated section, and club settings support name and speed-unit defaults. **Apply the second SQL migration** using the [club workspace setup guide](docs/club-workspace-setup.md). Coaches, Sessions and Equipment are marked Upcoming.
+
 ## App navigation and account recovery
 
 Home is now `/`; the simulator has moved to `/bench`. Theme controls, About, Help, Contact and Account pages are included. See [account shell and recovery setup](docs/account-shell-setup.md) before testing password reset emails. Invitation management and the full dashboards remain planned.

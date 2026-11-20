@@ -945,3 +945,5 @@ h3 {
     scroll-behavior: auto !important;
   }
 }
+.workspace-cards { margin-top: 1.5rem; }
+.pagination { display:flex; gap:1rem; margin:1rem 0; }

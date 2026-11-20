@@ -28,9 +28,10 @@
         <button class="solid">Sign in</button>
       </form>
       {#if form?.message}<p class="feedback error" role="alert">{form.message}</p>{/if}
+      <a class="text-link" href="/forgot-password">Forgotten your password?</a>
       <p class="caption">
         Accounts are provisioned for club staff. Riders do not need an account to train. Contact the
-        person managing your club’s system if you need access or a password reset.
+        person managing your club’s system if you need access.
       </p>
     {:else}
       <p>
@@ -39,6 +40,6 @@
       </p>
       <div class="notice">No backend is configured. The bench simulator is still available.</div>
     {/if}
-    <a class="text-link" href="/">Open bench simulator</a>
+    <a class="text-link" href="/bench">Open bench simulator</a>
   </section>
 </main>

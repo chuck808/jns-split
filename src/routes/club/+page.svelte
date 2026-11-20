@@ -41,5 +41,5 @@
       </p>
     </section>
   {/if}
-  <a class="text-link" href="/">Open bench simulator</a>
+  <a class="text-link" href="/bench">Open bench simulator</a>
 </main>

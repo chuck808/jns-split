@@ -75,7 +75,7 @@
         href="/club"
       >
         Your clubs
-      </a><a class="nav-link" href="/">Bench simulator</a>
+      </a><a class="nav-link" href="/bench">Bench simulator</a>
     </nav>
     <div class="side-bottom">
       <p>Every effort counts.</p>

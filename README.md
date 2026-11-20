@@ -17,7 +17,11 @@ Bench simulator features:
 - Comparable personal session best/mean, time chart, average speed and CSV export.
 - Read-only Core2 USB scan ingestion (desktop Chrome/Edge) and pasted JSON fallback.
 
-**Use fictional records during testing.** The simulator at `/` keeps its data in the current browser tab and loses it on refresh; exports are labelled SIMULATED. The separate `/club` register persists to Supabase when configured. Neither is connected to live timing or controller acknowledgement. The Core2 does not claim lane acceptance.
+**Use fictional records during testing.** The simulator at `/bench` keeps its data in the current browser tab and loses it on refresh; exports are labelled SIMULATED. The separate `/club` register persists to Supabase when configured. Neither is connected to live timing or controller acknowledgement. The Core2 does not claim lane acceptance.
+
+## App navigation and account recovery
+
+Home is now `/`; the simulator has moved to `/bench`. Theme controls, About, Help, Contact and Account pages are included. See [account shell and recovery setup](docs/account-shell-setup.md) before testing password reset emails. Invitation management and the full dashboards remain planned.
 
 ## VS Code
 

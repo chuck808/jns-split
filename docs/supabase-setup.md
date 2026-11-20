@@ -6,11 +6,11 @@ This milestone adds password sign-in, club creation, rider registration and tag 
 
 1. Create a separate development Supabase project. In its SQL editor, run `supabase/migrations/202611190001_club_registry.sql` once against a fresh database. The migration is transactional; do not rerun it over existing tables. Future changes should use new migrations.
 2. In Authentication settings, disable **Allow new users to sign up**. This pilot is administrator-provisioned. An authenticated account without memberships can create its first club, so do not enable public sign-up.
-3. In Authentication → Users, add a test admin with an email and password; confirm the test account through the dashboard. The app does not send invitations, provide password recovery, or accept rider self-registration yet. Account/password administration is currently handled by the project owner in Supabase.
+3. In Authentication → Users, add a test admin with an email and password; confirm the test account through the dashboard. The app does not send invitations or accept rider self-registration yet. Password recovery is available after configuring the email template in [account shell setup](account-shell-setup.md). The project owner still provisions accounts in Supabase.
 4. Copy `.env.example` to `.env`. Set the project URL and **publishable key** from the project dashboard. A legacy `anon` JWT also works. Do not use a secret or `service_role` key. Never commit `.env` or paste credentials into a pull request.
 5. Run `npm ci`, then `npm run dev`. Open `/login`, sign in, create your test club, and register a fictional rider. Refresh to verify persistence.
 
-Without valid configuration, `/login` explains setup and the simulator at `/` still works. The app rejects elevated keys in configuration. Supabase Auth validates passwords and the server revalidates sessions; PostgreSQL policies and checked functions enforce club access.
+Without valid configuration, `/login` explains setup and the simulator at `/bench` still works. The app rejects elevated keys in configuration. Supabase Auth validates passwords and the server revalidates sessions; PostgreSQL policies and checked functions enforce club access.
 
 For Vercel, add the same two environment variables to the intended test/preview environment and redeploy. Use a development database for previews, not real club data. No Supabase project or deployment is created by this code.
 

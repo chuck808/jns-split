@@ -133,6 +133,7 @@
         </button>{/each}
     </nav>
     <div class="side-bottom">
+      <a class="text-link" href="/club">Club administration</a>
       <span class="pill">PROTOTYPE 0.1</span>
       <p>Every effort counts.</p>
       <small>Test data only · No cloud sync</small>
@@ -144,7 +145,7 @@
         <span class="eyebrow">COACH / TEST CLUB</span>
         <h1>{tab}</h1>
       </div>
-      <span class="pill lime">Bench mode</span>
+      <div><a class="text-link" href="/club">Club administration</a> <span class="pill lime">Bench mode</span></div>
     </header>
     <div class="notice">
       <strong>Simulator workspace</strong><span>

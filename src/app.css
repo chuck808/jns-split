@@ -544,3 +544,88 @@ footer span {
     padding: 1.1rem;
   }
 }
+/* Persistent club workspace */
+.account-page {
+  max-width: 580px;
+  margin: 3rem auto;
+  padding: 1.5rem;
+}
+.account-page.wide {
+  max-width: 920px;
+}
+.auth-panel {
+  margin-top: 2rem;
+}
+.auth-panel label {
+  margin: 1rem 0;
+}
+.auth-panel .solid {
+  width: 100%;
+  margin: 1rem 0;
+}
+.text-link {
+  color: #d2f66c;
+  text-decoration: underline;
+  display: inline-block;
+  margin: 1rem 0;
+}
+.club-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.club-link:hover {
+  border-color: #c8ef45;
+}
+.nav-link {
+  padding: 0.65rem 1rem;
+  color: #b8c5cb;
+  text-decoration: none;
+  border-radius: 9px;
+}
+.nav-link.active {
+  background: #c8ef451a;
+  color: #d2f66c;
+  box-shadow: inset 3px 0 #c8ef45;
+}
+.panel form {
+  margin: 1rem 0;
+}
+.panel form > button {
+  margin-top: 1rem;
+}
+details {
+  margin: 1.3rem 0;
+  padding: 0.8rem 0;
+  border-top: 1px solid #435158;
+}
+summary {
+  cursor: pointer;
+  color: #cbd7dd;
+}
+h3 {
+  font-weight: 650;
+  margin: 1.5rem 0 0.8rem;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.checkbox-label input {
+  width: auto;
+  margin: 0;
+}
+.block {
+  display: block;
+  margin-top: 0.3rem;
+}
+@media (max-width: 720px) {
+  .nav-link {
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+  .account-page {
+    margin: 1rem auto;
+  }
+}

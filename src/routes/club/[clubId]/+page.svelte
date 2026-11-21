@@ -31,9 +31,12 @@
     </a>
   </section>
   <section class="panel">
-    <h2>Session recording</h2>
-    <p>Upcoming. Live sessions and timing uploads are not connected yet.</p>
-    <a class="text-link" href="/bench">Open the bench simulator</a>
+    <h2>Session planning</h2>
+    <p>
+      Create a session plan and assign approved coaches. Hardware recording and timing uploads are
+      not connected yet.
+    </p>
+    <a class="text-link" href={`/club/${data.club.id}/sessions`}>Plan a session</a>
   </section>
   <section class="panel">
     <h2>Club defaults</h2>

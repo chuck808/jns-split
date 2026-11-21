@@ -17,6 +17,7 @@
       Your account email must be confirmed before you can view or accept invitations. Contact the
       project owner.
     </p>{/if}
+  <a class="solid link-button" href="/coach/sessions">My assigned sessions</a>
   <section class="panel">
     <h2>Invitations</h2>
     {#each data.workspace.invitations as invite}<article class="panel">
@@ -45,8 +46,8 @@
         <h3>{club.name}</h3>
         <span class="pill">Coach link approved</span>
         <p>
-          Session access and rider-history grants are upcoming. Your membership does not expose the
-          club register.
+          Open My assigned sessions to see plans shared with you. Rider-history grants are not
+          enabled, and your membership does not expose the club register.
         </p>
       </article>{:else}<p>
         You have no approved coach links yet. Ask a club administrator to invite your account email.

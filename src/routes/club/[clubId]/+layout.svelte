@@ -5,7 +5,7 @@
     ['', 'Overview'],
     ['riders', 'Riders & tags'],
     ['coaches', 'Coaches'],
-    ['sessions', 'Sessions · Upcoming'],
+    ['sessions', 'Sessions'],
     ['equipment', 'Equipment · Upcoming'],
     ['settings', 'Settings']
   ];

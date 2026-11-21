@@ -44,7 +44,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (protectedArea) {
     for (const [name, value] of Object.entries(authHeaders)) response.headers.set(name, value);
     response.headers.set('cache-control', 'private, no-store');
-    response.headers.set('referrer-policy', 'no-referrer');
+    response.headers.set('referrer-policy', 'same-origin');
   }
   return response;
 };

@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Confirm password reset · JNS SPLIT</title><meta name="referrer" content="no-referrer" />
+  <title>Confirm password reset · JNS SPLIT</title><meta name="referrer" content="same-origin" />
 </svelte:head>
 <main class="account-page">
   <section class="panel auth-panel">

@@ -6,7 +6,7 @@
     ['riders', 'Riders & tags'],
     ['coaches', 'Coaches'],
     ['sessions', 'Sessions'],
-    ['equipment', 'Equipment · Upcoming'],
+    ['equipment', 'Test equipment'],
     ['settings', 'Settings']
   ];
 </script>

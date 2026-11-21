@@ -11,6 +11,7 @@ import {
 import {
   sessionFilters,
   sessionInput,
+  sessionActivity,
   sessionError,
   type SessionDetail
 } from '#lib/training-sessions';
@@ -47,7 +48,11 @@ export const load: PageServerLoad = async (event) => {
       'Unable to load session participants. Check migration 005 or refresh if access has changed.'
     );
   let candidates: CandidatePage | null = null;
-  if (detail.isAdmin && detail.session.status === 'planned') {
+  if (
+    detail.isAdmin &&
+    detail.session.status === 'planned' &&
+    detail.session.activity !== 'free_ride'
+  ) {
     const result = await client.rpc('session_participant_candidates', {
       p_session_id: event.params.sessionId,
       p_query: filters.query,
@@ -69,6 +74,37 @@ export const load: PageServerLoad = async (event) => {
   };
 };
 export const actions: Actions = {
+  activity: async (event) => {
+    const { client } = requireUser(event);
+    if (!uuid(event.params.sessionId)) error(404, 'Session not found.');
+    const form = await event.request.formData();
+    let activity;
+    try {
+      activity = sessionActivity(form.get('activity'));
+    } catch (e) {
+      return fail(400, { message: (e as Error).message, ok: false });
+    }
+    const version = Number(form.get('version'));
+    if (!Number.isSafeInteger(version) || version < 1)
+      return fail(400, { message: 'Refresh this session before saving.', ok: false });
+    const { error: problem } = await client.rpc('set_session_activity', {
+      p_id: event.params.sessionId,
+      p_version: version,
+      p_activity: activity
+    });
+    if (problem)
+      return fail(400, {
+        message:
+          problem.code === '22023'
+            ? 'The session must be planned with no participants before changing activity. Remove planned participants or create a new session.'
+            : sessionError(problem.code),
+        ok: false
+      });
+    return {
+      message: 'Session activity saved. No live practice session has been opened.',
+      ok: true
+    };
+  },
   addParticipant: async (event) => {
     const { client } = requireUser(event);
     if (!uuid(event.params.sessionId)) error(404, 'Session not found.');

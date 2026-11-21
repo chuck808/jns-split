@@ -4,6 +4,7 @@ import { requireAdmin } from '#lib/server/access';
 import {
   sessionFilters,
   sessionInput,
+  sessionActivity,
   sessionError,
   type SessionList
 } from '#lib/training-sessions';
@@ -22,13 +23,17 @@ export const actions: Actions = {
   default: async (event) => {
     const { client } = await requireAdmin(event, event.params.clubId);
     let input;
+    let activity;
     try {
-      input = sessionInput(await event.request.formData());
+      const form = await event.request.formData();
+      input = sessionInput(form);
+      activity = sessionActivity(form.get('activity'));
     } catch (e) {
       return fail(400, { message: (e as Error).message });
     }
-    const { data, error } = await client.rpc('create_training_session', {
+    const { data, error } = await client.rpc('create_session_plan', {
       p_club_id: event.params.clubId,
+      p_activity: activity,
       ...input
     });
     if (error) return fail(400, { message: sessionError(error.code) });

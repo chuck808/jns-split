@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { sessionDate, type SessionList } from '#lib/training-sessions';
+  import { activityLabel, sessionDate, type SessionList } from '#lib/training-sessions';
   let { list, status }: { list: SessionList; status: string } = $props();
   const link = (n: number) => '?' + new URLSearchParams({ status, page: String(n) });
 </script>
@@ -25,7 +25,8 @@
           <td><a class="text-link" href={`/sessions/${session.id}`}>{session.name}</a></td><td>
             {session.club_name}
           </td><td>{sessionDate(session.scheduled_at)}</td><td>
-            {session.distance_metres} m · {session.start_mode} · {session.lane_count} lanes
+            {activityLabel(session.activity)} · {session.distance_metres} m · {session.start_mode} · {session.lane_count}
+            lanes
           </td><td>{session.status}</td>
         </tr>{/each}
     </tbody>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import SessionFields from '#lib/components/SessionFields.svelte';
   import SessionParticipants from '#lib/components/SessionParticipants.svelte';
-  import { sessionDate } from '#lib/training-sessions';
+  import { sessionDate, activityLabel } from '#lib/training-sessions';
   let { data, form } = $props();
   let session = $derived(data.detail.session);
 </script>
@@ -26,6 +26,7 @@
     </p>{/if}
   <section class="panel">
     <h2>Session details</h2>
+    <p><strong>{activityLabel(session.activity)}</strong></p>
     <p>Status: <strong>{session.status}</strong> · {sessionDate(session.scheduled_at)}</p>
     <p>
       {session.distance_metres} metres · {session.start_mode} start · {session.lane_count} lanes
@@ -68,13 +69,51 @@
         This session is read-only. Create a new plan for another session.
       </p>{/if}
   </section>
-  <SessionParticipants
-    {session}
-    isAdmin={data.detail.isAdmin}
-    participants={data.participants}
-    candidates={data.candidates}
-    query={data.participantFilters.query}
-  />
+  <section class="panel">
+    <h2>Session activity and admission</h2>
+    {#if session.activity === 'free_ride'}
+      <p>
+        Open club practice: active riders with valid tags from this club will be able to scan at an
+        available lane without advance enrolment. Each lane runs independently.
+      </p>
+      <p>
+        No participant list needs preparing. Automatic participation and lane check-in await
+        controller integration; this is a saved plan only.
+      </p>
+    {:else}
+      <p>
+        Coached session: prepare a participant list below. Each effort will still use a rider's lane
+        scan.
+      </p>
+    {/if}
+    {#if data.detail.isAdmin && session.status === 'planned'}
+      <form method="POST" action="?/activity">
+        <input type="hidden" name="version" value={session.version} />
+        <label>
+          Session activity<select name="activity" value={session.activity}>
+            <option value="coached">Coached session</option><option value="free_ride">
+              Free ride · open club practice
+            </option>
+          </select>
+        </label>
+        <p>
+          Changing activity requires an empty participant list. Existing riders are never removed
+          automatically. Start type and distance remain separate settings.
+        </p>
+        <button disabled={data.participants.total > 0}>Save activity</button>
+      </form>
+    {/if}
+  </section>
+  {#if session.activity !== 'free_ride'}
+    <SessionParticipants
+      {session}
+      isAdmin={data.detail.isAdmin}
+      participants={data.participants}
+      candidates={data.candidates}
+      query={data.participantFilters.query}
+    />
+  {/if}
+
   {#if data.detail.isAdmin}<section class="panel">
       <h2>Session coaches</h2>
       <p>

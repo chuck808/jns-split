@@ -23,6 +23,10 @@ Bench simulator features:
 
 The club landing page now shows real registry totals and recent changes. Rider management has moved to its own searchable, paginated section, and club settings support name and speed-unit defaults. **Apply the second SQL migration** using the [club workspace setup guide](docs/club-workspace-setup.md). Equipment remains marked Upcoming. Session planning and per-session coach permissions are now available after migration 004; follow the [session planning setup guide](docs/session-planning-setup.md). Coaches now has invitations and membership management; apply migration 003 using the [coach invitations setup guide](docs/coach-invitations-setup.md).
 
+## Session participants
+
+Club administrators can now add/remove active club riders in planned sessions. Assigned coaches see only those participant names and registration status. Apply migration 005 using the [session participants setup guide](docs/session-participants-setup.md). This is session planning, not lane assignment, attendance or result recording.
+
 ## App navigation and account recovery
 
 Home is now `/`; the simulator has moved to `/bench`. Theme controls, About, Help, Contact and Account pages are included. See [account shell and recovery setup](docs/account-shell-setup.md) before testing password reset emails. Invitation management and the full dashboards remain planned.

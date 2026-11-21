@@ -1,5 +1,6 @@
 <script lang="ts">
   import SessionFields from '#lib/components/SessionFields.svelte';
+  import SessionParticipants from '#lib/components/SessionParticipants.svelte';
   import { sessionDate } from '#lib/training-sessions';
   let { data, form } = $props();
   let session = $derived(data.detail.session);
@@ -67,9 +68,19 @@
         This session is read-only. Create a new plan for another session.
       </p>{/if}
   </section>
+  <SessionParticipants
+    {session}
+    isAdmin={data.detail.isAdmin}
+    participants={data.participants}
+    candidates={data.candidates}
+    query={data.participantFilters.query}
+  />
   {#if data.detail.isAdmin}<section class="panel">
       <h2>Session coaches</h2>
-      <p>Permission applies only to this session. No rider history is shared.</p>
+      <p>
+        Permission includes this session’s participant names. It does not expose tags, the full club
+        register or rider history.
+      </p>
       {#each data.detail.coaches as coach}<p>
           {coach.email} · {coach.can_manage ? 'Can edit and close' : 'View only'}
         </p>

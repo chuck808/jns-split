@@ -3,6 +3,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { requireUser } from '#lib/server/access';
 import { uuid, type ClubCoaches } from '#lib/coaches';
 import {
+  participantFilters,
+  participantError,
+  type ParticipantPage,
+  type CandidatePage
+} from '#lib/session-participants';
+import {
   sessionFilters,
   sessionInput,
   sessionError,
@@ -30,9 +36,80 @@ export const load: PageServerLoad = async (event) => {
     if (result.error) error(503, 'Unable to load approved coaches.');
     directory = result.data as ClubCoaches;
   }
-  return { detail, directory };
+  const filters = participantFilters(event.url.searchParams);
+  const participantResult = await client.rpc('list_session_participants', {
+    p_session_id: event.params.sessionId,
+    p_page: filters.participantsPage
+  });
+  if (participantResult.error)
+    error(
+      participantResult.error.code === '42501' ? 404 : 503,
+      'Unable to load session participants. Check migration 005 or refresh if access has changed.'
+    );
+  let candidates: CandidatePage | null = null;
+  if (detail.isAdmin && detail.session.status === 'planned') {
+    const result = await client.rpc('session_participant_candidates', {
+      p_session_id: event.params.sessionId,
+      p_query: filters.query,
+      p_page: filters.candidatesPage
+    });
+    if (result.error)
+      error(
+        result.error.code === '42501' ? 404 : 503,
+        'Unable to load eligible riders. Refresh if the session has closed.'
+      );
+    candidates = result.data as CandidatePage;
+  }
+  return {
+    detail,
+    directory,
+    participants: participantResult.data as ParticipantPage,
+    candidates,
+    participantFilters: filters
+  };
 };
 export const actions: Actions = {
+  addParticipant: async (event) => {
+    const { client } = requireUser(event);
+    if (!uuid(event.params.sessionId)) error(404, 'Session not found.');
+    const form = await event.request.formData();
+    const id = String(form.get('riderId') ?? '');
+    const version = Number(form.get('version'));
+    if (!uuid(id) || !Number.isSafeInteger(version) || version < 1)
+      return fail(400, { message: 'Choose a valid rider and refresh the session.', ok: false });
+    const { error: problem } = await client.rpc('add_session_participant', {
+      p_session_id: event.params.sessionId,
+      p_rider_id: id,
+      p_version: version
+    });
+    if (problem) return fail(400, { message: participantError(problem.code), ok: false });
+    return {
+      message: 'Rider is on the session participant list. No lane has been assigned.',
+      ok: true
+    };
+  },
+  removeParticipant: async (event) => {
+    const { client } = requireUser(event);
+    if (!uuid(event.params.sessionId)) error(404, 'Session not found.');
+    const form = await event.request.formData();
+    const id = String(form.get('riderId') ?? '');
+    const version = Number(form.get('version'));
+    if (!uuid(id) || !Number.isSafeInteger(version) || version < 1)
+      return fail(400, {
+        message: 'Choose a valid participant and refresh the session.',
+        ok: false
+      });
+    const { error: problem } = await client.rpc('remove_session_participant', {
+      p_session_id: event.params.sessionId,
+      p_rider_id: id,
+      p_version: version
+    });
+    if (problem) return fail(400, { message: participantError(problem.code), ok: false });
+    return {
+      message: 'Rider removed from this session. Their club registration and tag are unchanged.',
+      ok: true
+    };
+  },
   update: async (event) => {
     const { client } = requireUser(event);
     if (!uuid(event.params.sessionId)) error(404, 'Session not found.');

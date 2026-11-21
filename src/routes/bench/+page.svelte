@@ -3,6 +3,9 @@
   import { Button } from 'flowbite-svelte';
   import {
     createSession,
+    startLane,
+    finishLane,
+    type Activity,
     configure,
     enrol,
     scan,
@@ -18,6 +21,7 @@
   } from '#lib/session';
   import { connectReader } from '#lib/serial';
   let session = $state(createSession());
+  let activity = $state<Activity>('Coached');
   let tab = $state('Live session');
   let feedback = $state('Ready for your first test scan.');
   let failed = $state(false);
@@ -145,7 +149,10 @@
         <span class="eyebrow">COACH / TEST CLUB</span>
         <h1>{tab}</h1>
       </div>
-      <div><a class="text-link" href="/club">Club administration</a> <span class="pill lime">Bench mode</span></div>
+      <div>
+        <a class="text-link" href="/club">Club administration</a>
+        <span class="pill lime">Bench mode</span>
+      </div>
     </header>
     <div class="notice">
       <strong>Simulator workspace</strong><span>
@@ -157,7 +164,7 @@
       <section class="session-top">
         <div>
           <span class="eyebrow">SESSION SETUP</span>
-          <h2>{session.distance}m · {session.mode} start</h2>
+          <h2>{session.activity} · {session.distance}m · {session.mode} start</h2>
           <p>
             Run {session.run} · {session.lanes.length} lanes · {session.phase === 'Armed'
               ? 'Assignments locked'
@@ -174,7 +181,13 @@
         {#each session.lanes as l}<article class="lane-card" class:assigned={!!l.riderId}>
             <div class="card-top">
               <span>LANE {l.number}</span><span class="pill">
-                {session.phase === 'Armed' ? 'Locked' : l.riderId ? 'Checked in' : 'Awaiting tap'}
+                {l.running
+                  ? 'Running'
+                  : session.phase === 'Armed'
+                    ? 'Locked'
+                    : l.riderId
+                      ? 'Checked in'
+                      : 'Awaiting tap'}
               </span>
             </div>
             <div class="lane-number">{String(l.number).padStart(2, '0')}</div>
@@ -182,7 +195,60 @@
             <p>
               {l.riderId ? 'Assigned in the simulator' : 'Rider checks in at this lane’s reader'}
             </p>
-            {#if session.phase === 'Armed'}<label>
+            {#if session.activity === 'Free ride'}
+              {#if l.running}
+                <label>
+                  Simulated elapsed time (s)<input
+                    type="number"
+                    min="0.001"
+                    max="300"
+                    step="0.001"
+                    bind:value={times[l.number]}
+                  />
+                </label>
+                {#each ['Completed', 'DNF', 'Cancelled'] as outcome}
+                  <button
+                    onclick={() =>
+                      act(() => {
+                        session = finishLane(
+                          session,
+                          l.number,
+                          times[l.number],
+                          outcome as 'Completed' | 'DNF' | 'Cancelled'
+                        );
+                        feedback = `Lane ${l.number}: ${outcome}. Scan again for the next effort.`;
+                      })}
+                  >
+                    {outcome === 'Completed'
+                      ? 'Simulate finish'
+                      : outcome === 'DNF'
+                        ? 'Simulate DNF'
+                        : 'Cancel effort'}
+                  </button>
+                {/each}
+              {:else}
+                <button
+                  disabled={!l.riderId}
+                  onclick={() =>
+                    act(() => {
+                      session = startLane(session, l.number);
+                      feedback = `Simulated start on lane ${l.number}. Other lanes remain independent.`;
+                    })}
+                >
+                  Simulate start signal
+                </button>
+                <button
+                  disabled={!l.riderId}
+                  onclick={() =>
+                    act(() => {
+                      session = clearLane(session, l.number);
+                      feedback = 'Lane cleared.';
+                    })}
+                >
+                  Clear assignment
+                </button>
+              {/if}
+            {:else if session.phase === 'Armed'}<label>
                 Simulated elapsed time (s)<input
                   type="number"
                   min="0.001"
@@ -204,7 +270,13 @@
           </article>{/each}
       </div>
       <div class="run-controls">
-        {#if session.phase === 'Collecting'}<Button
+        {#if session.activity === 'Free ride'}
+          <p>
+            Open club practice: scan any registered test rider. No session enrolment or full set of
+            lanes needed. Start/finish buttons simulate hardware signals; a tag scan does not start
+            the timer.
+          </p>
+        {:else if session.phase === 'Collecting'}<Button
             color="alternative"
             class="primary-action"
             disabled={ready !== session.lanes.length}
@@ -272,7 +344,15 @@
         </section>
         <section class="panel">
           <h2>Session configuration</h2>
-          <p>Clear all assignments before changing the setup.</p>
+          <p>
+            Clear all assignments before changing the setup. Free ride lets each lane run
+            independently.
+          </p>
+          <label>
+            Session activity<select bind:value={activity}>
+              <option>Coached</option><option>Free ride</option>
+            </select>
+          </label>
           <div class="form-row">
             <label>
               Lanes<select bind:value={count}>
@@ -290,7 +370,7 @@
             disabled={ready > 0 || session.phase === 'Armed'}
             onclick={() =>
               act(() => {
-                session = configure(session, Number(count), Number(distance), mode);
+                session = configure(session, Number(count), Number(distance), mode, activity);
                 lane = 1;
                 feedback = 'Setup updated.';
               })}
@@ -346,7 +426,9 @@
         <div class="section-heading">
           <div>
             <h2>Personal progress</h2>
-            <p>Comparable efforts only: {session.distance}m · {session.mode} start.</p>
+            <p>
+              Comparable efforts only: {session.activity} · {session.distance}m · {session.mode} start.
+            </p>
           </div>
           <label>
             Rider<select bind:value={selectedRider}>
@@ -408,7 +490,7 @@
             </thead><tbody>
               {#each [...session.results].reverse() as r}<tr>
                   <td><small>Run {r.run}</small>{r.riderName}</td><td>{r.lane}</td><td>
-                    {r.distance}m · {r.mode}
+                    {r.activity} · {r.distance}m · {r.mode}
                   </td><td>{r.outcome}</td><td>
                     {r.elapsedUs !== null ? (r.elapsedUs / 1e6).toFixed(3) + ' s' : '—'}
                   </td><td>

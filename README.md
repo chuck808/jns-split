@@ -88,3 +88,8 @@ No Vercel project or deployment has been created by this scaffold. Preview URLs 
 See [development plan](docs/development-plan.md), [bench scan contract](docs/reader-contract.md) and [acceptance checklist](docs/acceptance.md).
 
 Supabase Auth, database migrations and club-level RLS are included for the registry pilot. Next: live project acceptance, coach grants and controller integration.
+
+
+## Free-ride bench workflow
+
+At `/bench`, select **Free ride** under Session configuration to test independent lane starts and finishes without advance session enrolment. All data remains fictional and local to the browser tab. See [setup, walkthrough and production requirements](docs/free-ride-setup.md). No database migration is needed for this simulator update.

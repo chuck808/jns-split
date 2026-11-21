@@ -21,7 +21,7 @@ Bench simulator features:
 
 ## Club workspace
 
-The club landing page now shows real registry totals and recent changes. Rider management has moved to its own searchable, paginated section, and club settings support name and speed-unit defaults. **Apply the second SQL migration** using the [club workspace setup guide](docs/club-workspace-setup.md). Coaches, Sessions and Equipment are marked Upcoming.
+The club landing page now shows real registry totals and recent changes. Rider management has moved to its own searchable, paginated section, and club settings support name and speed-unit defaults. **Apply the second SQL migration** using the [club workspace setup guide](docs/club-workspace-setup.md). Sessions and Equipment remain marked Upcoming. Coaches now has invitations and membership management; apply migration 003 using the [coach invitations setup guide](docs/coach-invitations-setup.md).
 
 ## App navigation and account recovery
 

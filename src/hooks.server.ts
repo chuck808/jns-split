@@ -10,7 +10,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   event.locals.supabase = null;
   event.locals.user = null;
   const protectedArea =
-    /^\/(club|login|logout|account|forgot-password|reset-password|auth)(\/|$)/.test(
+    /^\/(club|coach|login|logout|account|forgot-password|reset-password|auth)(\/|$)/.test(
       event.url.pathname
     );
   const authHeaders: Record<string, string> = {};

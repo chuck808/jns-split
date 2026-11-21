@@ -4,7 +4,7 @@
   const sections = [
     ['', 'Overview'],
     ['riders', 'Riders & tags'],
-    ['coaches', 'Coaches · Upcoming'],
+    ['coaches', 'Coaches'],
     ['sessions', 'Sessions · Upcoming'],
     ['equipment', 'Equipment · Upcoming'],
     ['settings', 'Settings']

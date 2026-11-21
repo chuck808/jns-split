@@ -15,11 +15,16 @@
   <p>Signed in as {data.email}</p>
   {#if data.message}<div class="feedback error" role="alert">{data.message}</div>{/if}
   {#if form?.message}<div class="feedback error" role="alert">{form.message}</div>{/if}
+  {#if data.coachInvitations || data.coachLinks}<section class="panel">
+      <h2>Your coach workspace</h2>
+      <p>{data.coachInvitations} pending invitations · {data.coachLinks} approved club links</p>
+      <a class="solid link-button" href="/coach">Open coach workspace</a>
+    </section>{/if}
   {#each data.clubs as club}<a class="panel club-link" href={`/club/${club.id}`}>
       <h2>{club.name}</h2>
       <p>Manage the rider register and RFID tags</p>
     </a>{/each}
-  {#if !data.hasMembership && !data.message}
+  {#if !data.hasMembership && !data.message && !data.coachInvitations}
     <section class="panel">
       <h2>Set up your club</h2>
       <p>
@@ -34,12 +39,13 @@
     </section>
   {:else if !data.clubs.length && !data.message}
     <section class="panel">
-      <h2>Administrator access needed</h2>
+      <h2>Coach workspace available</h2>
       <p>
-        Your account has a membership, but this first workspace is for club administrators. Coach
-        access will be added with session permissions.
+        This workspace is for club administrators. Use Coach workspace to see your invitations and
+        approved club links.
       </p>
     </section>
   {/if}
+  <a class="text-link" href="/coach">Open coach workspace and invitations</a>
   <a class="text-link" href="/bench">Open bench simulator</a>
 </main>

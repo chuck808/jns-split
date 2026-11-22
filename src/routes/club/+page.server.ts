@@ -6,7 +6,7 @@ export const load: PageServerLoad = async (event) => {
   if (!event.locals.backendReady) redirect(303, '/login');
   const { client, user } = requireUser(event);
   const { data: memberships, error: membershipError } = await client
-    .from('club_memberships')
+    .from('club_membership_roles')
     .select('club_id,role');
   const { data: clubs, error: clubError } = await client
     .from('clubs')

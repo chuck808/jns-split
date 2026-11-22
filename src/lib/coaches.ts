@@ -20,7 +20,7 @@ export interface CoachWorkspace {
   emailConfirmed: boolean;
 }
 export function coachError(code: string): string {
-  if (code === '23505') return 'This person already has a club membership or a pending invitation.';
+  if (code === '23505') return 'This person already has a coach role or a pending invitation.';
   if (code === '42501')
     return 'You do not have access to this invitation or club. Check the signed-in account.';
   if (code === '22023')

@@ -9,8 +9,9 @@
 <svelte:head><title>Coaches · {data.club.name} · JNS SPLIT</title></svelte:head>
 <h1>Coaches</h1>
 <p>
-  Invite coaches to establish an approved club link. Session controls and rider-history permissions
-  are separate and are not enabled yet.
+  Invite coaches to establish an approved club link, then assign their session permissions.
+  Rider-history access remains separate. Club administrators can also accept a coach invitation for
+  this club without losing their administrator role.
 </p>
 {#if form?.message}<p class="feedback" class:error={!form.ok} role="status">{form.message}</p>{/if}
 <section class="panel">
@@ -47,9 +48,9 @@
         <summary>Remove coach</summary>
         <form method="POST" action="?/remove">
           <input type="hidden" name="userId" value={coach.user_id} /><label class="checkbox-label">
-            <input type="checkbox" name="confirm" value="yes" required />Remove this coach from {data
-              .club.name}
-          </label><button>Remove club link</button>
+            <input type="checkbox" name="confirm" value="yes" required />Remove the coach role and
+            its session assignments from {data.club.name}
+          </label><button>Remove coach role</button>
         </form>
       </details>
     </article>{:else}<p>No approved coaches yet.</p>{/each}

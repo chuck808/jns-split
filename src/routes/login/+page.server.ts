@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
-  if (locals.user) redirect(303, '/club');
+  if (locals.user) redirect(303, '/app');
   return { configured: locals.backendReady };
 };
 

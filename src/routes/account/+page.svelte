@@ -12,7 +12,7 @@
     <h2>Signed in as</h2>
     <p>{data.email}</p>
     <p>Your account can access only the clubs and records it has been authorised to use.</p>
-    <a class="text-link" href="/club">Open your club workspace</a>
+    <a class="text-link" href="/app">Open your workspace</a>
     <h2>Appearance</h2>
     <p>
       Use the theme selector at the top of any page. Your choice is remembered on this browser;

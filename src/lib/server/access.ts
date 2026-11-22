@@ -10,10 +10,11 @@ export async function requireAdmin(event: RequestEvent, clubId: string) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clubId))
     error(404, 'Club not found.');
   const { data, error: queryError } = await client
-    .from('club_memberships')
+    .from('club_membership_roles')
     .select('role')
     .eq('club_id', clubId)
     .eq('user_id', user.id)
+    .eq('role', 'admin')
     .maybeSingle();
   if (queryError) error(503, 'Unable to check club access. Please try again.');
   if (data?.role !== 'admin') error(404, 'Club not found.');

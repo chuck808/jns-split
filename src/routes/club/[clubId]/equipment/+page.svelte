@@ -1,6 +1,13 @@
 <script lang="ts">
+  import BenchMonitor from '#lib/components/BenchMonitor.svelte';
   import { activityLabel, sessionDate } from '#lib/training-sessions';
   let { data, form } = $props();
+  let monitorChoices = $derived([
+    ...data.sessions.items.map((s) => ({ id: s.id, name: s.name })),
+    ...Array.from(new Set(data.devices.map((d) => d.session_id)))
+      .filter((id) => !data.sessions.items.some((s) => s.id === id))
+      .map((id) => ({ id, name: `Device session ${id}` }))
+  ]);
 </script>
 
 <svelte:head><title>Test equipment · JNS SPLIT</title></svelte:head>
@@ -21,6 +28,7 @@
       finished.
     </p>
   </section>{/if}
+<BenchMonitor clubId={data.club.id} choices={monitorChoices} />
 <section class="panel">
   <h2>Connect a Core2 simulator</h2>
   <p>Endpoint: <code>{data.endpoint}</code></p>

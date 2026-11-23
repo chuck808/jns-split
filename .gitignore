@@ -10,3 +10,6 @@ build/
 # Migrations live only in supabase/migrations; the operator template in supabase/operator.
 /*.sql
 *.local.sql
+
+# Patch files received for git am; never commit them.
+*.patch

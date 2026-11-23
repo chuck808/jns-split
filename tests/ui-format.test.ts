@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatGap, formatTime, initials, isLane, laneColour } from '../src/lib/ui/format';
+import {
+  formatGap,
+  formatTime,
+  initials,
+  isLane,
+  laneColour,
+  tagSuffix
+} from '../src/lib/ui/format';
 
 test('formatTime shows three decimals and truncates rather than rounding up', () => {
   assert.equal(formatTime(1.398), '1.398');
@@ -36,4 +43,11 @@ test('initials are never empty', () => {
   assert.equal(initials('  '), '?');
   assert.equal(initials(null), '?');
   assert.equal(initials('Zoë Ó Briain'), 'ZB');
+});
+
+test('tagSuffix shows the last four hex characters', () => {
+  assert.equal(tagSuffix('04:a2:1b:7c:9d:3f:a3'), '…3FA3');
+  assert.equal(tagSuffix('04a21b7c'), '…1B7C');
+  assert.equal(tagSuffix('ab'), 'AB');
+  assert.equal(tagSuffix(null), '—');
 });

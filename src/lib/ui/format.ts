@@ -55,3 +55,12 @@ export function initials(name: string | null | undefined): string {
   const second = parts.length > 1 ? parts[parts.length - 1][0] : (parts[0][1] ?? '');
   return (first + second).toUpperCase();
 }
+
+/**
+ * Short, human-readable tag reference: the last four hex characters, as
+ * printed on most tag cards. Full UIDs stay available for diagnostics.
+ */
+export function tagSuffix(uid: string | null | undefined): string {
+  const hex = (uid ?? '').replace(/[^0-9a-f]/gi, '').toUpperCase();
+  return hex.length >= 4 ? '…' + hex.slice(-4) : hex || '—';
+}

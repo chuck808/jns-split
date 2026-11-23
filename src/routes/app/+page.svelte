@@ -30,13 +30,14 @@
       </p>
       <a class="text-link" href="/coach">Check coach invitations</a>
       <p>
-        Setting up this private pilot? <a href="/club">Open existing club setup</a>. Public club
-        applications are not available yet.
+        Representing a club? <a href="/clubs/request">Apply to register your club</a>. Your
+        application needs platform approval before you can manage it.
       </p>
     </section>{/if}
   <p class="caption">
     Your choice is remembered on this browser for this account and checked against current
     permissions each time you return. Switching workspace changes the view, not your access rights.
   </p>
+  <a class="text-link" href="/clubs/request">Your club applications</a>
   <a class="text-link" href="/account">Account settings</a>
 </main>

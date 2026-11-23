@@ -50,9 +50,8 @@
     </p>
     <a class="text-link" href="/bench">Try the bench simulator</a>
     <p>
-      Interested in joining the pilot? <a class="text-link" href="/contact">
-        Contact and access information
-      </a>
+      Already have a pilot account? <a href="/clubs/request">Apply to register your club</a>. Need
+      an account? <a class="text-link" href="/contact"> Contact and access information </a>
     </p>
   </section>
 </main>

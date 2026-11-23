@@ -1,6 +1,6 @@
-import { fail, redirect } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
-import { requireUser, messageForDatabaseError } from '#lib/server/access';
+import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { requireUser } from '#lib/server/access';
 import type { CoachWorkspace } from '#lib/coaches';
 export const load: PageServerLoad = async (event) => {
   if (!event.locals.backendReady) redirect(303, '/login');
@@ -25,16 +25,4 @@ export const load: PageServerLoad = async (event) => {
         ? 'Unable to load clubs. Check the database setup and try again.'
         : ''
   };
-};
-export const actions: Actions = {
-  create: async (event) => {
-    const { client } = requireUser(event);
-    const form = await event.request.formData();
-    const name = String(form.get('name') ?? '').trim();
-    if (!name || name.length > 100)
-      return fail(400, { message: 'Enter a club name of 1–100 characters.' });
-    const { data, error } = await client.rpc('create_club', { p_name: name });
-    if (error) return fail(400, { message: messageForDatabaseError(error.code) });
-    redirect(303, `/club/${data}`);
-  }
 };

@@ -1,4 +1,5 @@
 /** Bench model only. The production controller will own lane assignments and timing. */
+export type Activity = 'Coached' | 'Free ride';
 export type StartMode = 'Flying' | 'Standing';
 export type Outcome = 'Completed' | 'Cancelled' | 'DNF';
 export interface Rider {
@@ -17,8 +18,10 @@ export interface Scan {
 export interface Lane {
   number: number;
   riderId: string | null;
+  running?: boolean;
 }
 export interface Result {
+  activity: Activity;
   id: string;
   run: number;
   riderId: string;
@@ -34,6 +37,7 @@ export interface Decision {
   message: string;
 }
 export interface Session {
+  activity: Activity;
   phase: 'Collecting' | 'Armed';
   distance: number;
   mode: StartMode;
@@ -76,6 +80,7 @@ export function parseScan(line: string): Scan {
 }
 export function createSession(): Session {
   return {
+    activity: 'Coached',
     phase: 'Collecting',
     distance: 20,
     mode: 'Flying',
@@ -98,7 +103,13 @@ export function enrol(s: Session, name: string, rawUid: string): Session {
   if (s.riders.some((r) => r.uid === uid)) throw new Error('That tag is already assigned.');
   return { ...s, riders: [...s.riders, { id: crypto.randomUUID(), name, uid }] };
 }
-export function configure(s: Session, count: number, distance: number, mode: StartMode): Session {
+export function configure(
+  s: Session,
+  count: number,
+  distance: number,
+  mode: StartMode,
+  activity: Activity = s.activity
+): Session {
   if (s.phase !== 'Collecting' || s.lanes.some((l) => l.riderId))
     throw new Error('Clear lane assignments before changing setup.');
   if (
@@ -108,13 +119,15 @@ export function configure(s: Session, count: number, distance: number, mode: Sta
     !Number.isFinite(distance) ||
     distance <= 0 ||
     distance > 1000 ||
-    !['Flying', 'Standing'].includes(mode)
+    !['Flying', 'Standing'].includes(mode) ||
+    !['Coached', 'Free ride'].includes(activity)
   )
     throw new Error('Invalid session configuration.');
   return {
     ...s,
     distance,
     mode,
+    activity,
     lanes: Array.from({ length: count }, (_, i) => ({ number: i + 1, riderId: null }))
   };
 }
@@ -137,6 +150,8 @@ export function scan(s: Session, input: Scan): { session: Session; decision: Dec
   if (s.phase !== 'Collecting')
     decision = { accepted: false, message: 'Run armed. Assignment is locked.' };
   else if (!lane) decision = { accepted: false, message: 'Lane is not enabled.' };
+  else if (lane.running || (rider && s.lanes.some((l) => l.running && l.riderId === rider.id)))
+    decision = { accepted: false, message: 'An effort is running. Assignment is locked.' };
   else if (!rider)
     decision = { accepted: false, message: 'Unknown tag. Register it under Riders & tags.' };
   else if (lane.riderId && lane.riderId !== rider.id)
@@ -158,16 +173,19 @@ export function scan(s: Session, input: Scan): { session: Session; decision: Dec
   };
 }
 export function clearLane(s: Session, number: number): Session {
-  if (s.phase !== 'Collecting') throw new Error('Armed assignments cannot be cleared.');
+  if (s.phase !== 'Collecting' || s.lanes.some((l) => l.number === number && l.running))
+    throw new Error('Running or armed assignments cannot be cleared.');
   return { ...s, lanes: s.lanes.map((l) => (l.number === number ? { ...l, riderId: null } : l)) };
 }
 export function arm(s: Session): Session {
+  if (s.activity !== 'Coached') throw new Error('Free ride uses independent lane starts.');
   if (s.phase !== 'Collecting' || s.lanes.some((l) => !l.riderId))
     throw new Error('Every enabled lane needs a rider.');
   return { ...s, phase: 'Armed' };
 }
 export function finish(s: Session, times: Record<number, number>, outcome: Outcome): Session {
-  if (s.phase !== 'Armed') throw new Error('Arm the run first.');
+  if (s.activity !== 'Coached' || s.phase !== 'Armed')
+    throw new Error('Arm the coached run first.');
   if (!['Completed', 'Cancelled', 'DNF'].includes(outcome)) throw new Error('Invalid outcome.');
   if (
     outcome === 'Completed' &&
@@ -179,6 +197,7 @@ export function finish(s: Session, times: Record<number, number>, outcome: Outco
   const results = s.lanes.map((l) => {
     const r = s.riders.find((r) => r.id === l.riderId)!;
     return {
+      activity: s.activity,
       id: crypto.randomUUID(),
       run: s.run,
       riderId: r.id,
@@ -207,6 +226,7 @@ export function comparable(s: Session, riderId: string): Result[] {
   return s.results.filter(
     (r) =>
       r.riderId === riderId &&
+      r.activity === s.activity &&
       r.mode === s.mode &&
       r.distance === s.distance &&
       r.outcome === 'Completed'
@@ -226,6 +246,7 @@ export function csv(results: Result[]): string {
       'lane',
       'distance_m',
       'start_mode',
+      'activity',
       'outcome',
       'elapsed_us',
       'avg_kmh'
@@ -237,6 +258,7 @@ export function csv(results: Result[]): string {
       r.lane,
       r.distance,
       r.mode,
+      r.activity,
       r.outcome,
       r.elapsedUs,
       speed(r)?.toFixed(2) ?? ''
@@ -244,4 +266,39 @@ export function csv(results: Result[]): string {
   ]
     .map((row) => row.map(cell).join(','))
     .join('\r\n');
+}
+
+/** These buttons stand in for controller start/finish events, not coach actions in production. */
+export function startLane(s: Session, number: number): Session {
+  const lane = s.lanes.find((l) => l.number === number);
+  if (s.activity !== 'Free ride' || !lane?.riderId || lane.running)
+    throw new Error('Scan into an available free-ride lane before starting.');
+  return { ...s, lanes: s.lanes.map((l) => (l.number === number ? { ...l, running: true } : l)) };
+}
+export function finishLane(s: Session, number: number, seconds: number, outcome: Outcome): Session {
+  const lane = s.lanes.find((l) => l.number === number);
+  if (s.activity !== 'Free ride' || !lane?.running || !lane.riderId)
+    throw new Error('Start this free-ride effort first.');
+  if (!['Completed', 'Cancelled', 'DNF'].includes(outcome)) throw new Error('Invalid outcome.');
+  if (outcome === 'Completed' && (!Number.isFinite(seconds) || seconds <= 0 || seconds > 300))
+    throw new Error('Enter a time above 0 and no more than 300 seconds.');
+  const rider = s.riders.find((r) => r.id === lane.riderId)!;
+  const result: Result = {
+    id: crypto.randomUUID(),
+    activity: s.activity,
+    run: s.run,
+    riderId: rider.id,
+    riderName: rider.name,
+    lane: number,
+    distance: s.distance,
+    mode: s.mode,
+    outcome,
+    elapsedUs: outcome === 'Completed' ? Math.round(seconds * 1e6) : null
+  };
+  return {
+    ...s,
+    run: s.run + 1,
+    results: [...s.results, result],
+    lanes: s.lanes.map((l) => (l.number === number ? { ...l, riderId: null, running: false } : l))
+  };
 }

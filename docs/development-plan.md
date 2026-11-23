@@ -3,7 +3,7 @@
 ## Repository boundary
 
 - jns-lanetime: controller, timing sensors, displays, readers, wiring and hardware tests. Keep the existing repo name/URLs for continuity.
-- jns-split-web: coach/club/rider UI, application models, future Supabase migrations and web tests. Independent Vercel deployment.
+- jns-split: coach/club/rider UI, application models, future Supabase migrations and web tests. Independent Vercel deployment.
 - Version contracts at both ends. Current v1 is a JSON-lines **bench scan** contract, not the timing radio protocol. Do not change the current 40-byte radio packets to accommodate it.
 
 ## Milestone 1 — supplied now
@@ -16,7 +16,9 @@ Define a separately versioned registration radio protocol. Bind reader identitie
 
 Measure shared-channel Wi-Fi/ESP-NOW coexistence using an access point fixed to channel 6. Test interference, reconnects and lost acknowledgements before cloud uploading during live timing. A two-ESP32 gateway remains an option.
 
-## Milestone 3 — Supabase club foundation
+## Milestone 3 — Supabase club foundation (registry slice implemented)
+
+The registry slice is being built before radio integration while hardware testing is pending. It includes admin sign-in, club creation, rider/tag records, archiving, audit and RLS tests. See [setup](supabase-setup.md). Invitations, coach grants, sessions and attempts remain pending.
 
 One current home club per rider; multiple separately approved coach links. Club admins enrol riders and issue/revoke/replace tags. A rider does not need a login to train. Visiting coaches receive session access; ongoing history access requires its own grant. Later invite guardians/riders into existing profiles, avoiding duplicate identities.
 

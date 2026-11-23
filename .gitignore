@@ -5,3 +5,8 @@ build/
 .env
 .env.*
 !.env.example
+
+# Filled-in operator scripts and stray SQL copies stay local.
+# Migrations live only in supabase/migrations; the operator template in supabase/operator.
+/*.sql
+*.local.sql

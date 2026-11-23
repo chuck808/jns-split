@@ -18,20 +18,20 @@ Public home is an entry point to the product, not a shop. No billing, subscripti
 
 | Area | Present | Gap before the intended experience |
 | --- | --- | --- |
-| Account | Sign-in/out, password recovery, account page; light/dark/system theme | Unified workspace resolver; account profile and managed invitations for new account types |
-| Club | Pilot club creation, overview counts, settings, paginated roster, tag lifecycle | Approved club registration, administrator handover, task-oriented home |
-| Coach | In-app invitations, approved club links, assigned sessions, view/edit grants | Unified coach home, multiple roles within one club; no broad rider-history access |
+| Account | Sign-in/out, password recovery, account page; light/dark/system theme; `/app` workspace resolver and chooser (migration 009) | Safe post-sign-in destination handling (§6 step 1); account profile and managed invitations for new account types |
+| Club | Reviewed club admission (migration 010), overview counts, settings, paginated roster, tag lifecycle; independent admin/coach roles | Administrator handover with last-admin protection, task-oriented home |
+| Coach | In-app invitations, approved club links, assigned sessions, view/edit grants; coach role independent of a same-club admin role | Unified coach home; no broad rider-history access |
 | Session planning | Coached/free-ride policy, distance, start type, lanes, participants, close/cancel | Actual operational session lifecycle and controller state |
 | Equipment | Expiring test credentials, Core2 WiFi simulator, admin-only lane monitor | Production device pairing, real health/acknowledgements, friendly operational controls |
 | Rider | Club-owned record, optional tag, no login required | Account-to-rider linkage, personal portal, recorded results |
 | Guardian | No implementation | Club-approved links to specific children and Family view |
-| Platform | No application-level platform role or dashboard | Role bootstrap, club application review, controlled support and operational monitoring |
+| Platform | Operator-appointed platform role with audit, `/admin` overview, application review with atomic approve/decline | Controlled support access and operational monitoring |
 | Results | Browser-local simulation; test lane monitor creates no results | Immutable measured attempts, result permissions, rider charts and comparisons |
-| Public | Home, About, Help, Contact page | Club application journey; configured contact delivery and approved notices |
+| Public | Home, About, Help, Contact page; club application journey at `/clubs/request` | Configured contact delivery and approved notices |
 
-Source areas checked: routes under `/club`, `/coach`, `/sessions`, `/account`, `/bench`; migrations 001–008; server access helpers. Existing production-like club data and isolated simulator tables must stay separate.
+Source areas checked (updated 23 November 2026, after slices A and B): routes under `/app`, `/admin`, `/clubs`, `/club`, `/coach`, `/sessions`, `/account`, `/bench`; migrations 001–010; server access helpers. Existing production-like club data and isolated simulator tables must stay separate.
 
-Two important existing constraints:
+Two constraints that shaped slices A and B (both now addressed in migrations 009 and 010):
 
 - `club_memberships` currently has one `(club_id,user_id)` row with a single `admin` or `coach` role. Coach queries often explicitly require `role='coach'`. An admin currently operates through admin permissions, not a separate same-club coach role.
 - `create_club` still permits an authenticated user with no memberships to create a pilot club. Public registration must replace that entitlement in the database, not merely hide the button. Existing approved pilot clubs must remain intact.
@@ -262,4 +262,68 @@ Each slice is a separate tested patch. Do not combine access-control changes, al
 
 These do not block the workspace/design foundation: initial platform operator account; signup/invitation email delivery and support destination; rider-account eligibility and guardian verification wording; transfer and historical access policy; retention/deletion rules; suspension and support-recovery procedure. No arbitrary legal, age or retention rules are introduced by this document.
 
-The next code release is slice A. This document-only release changes no runtime permissions, user accounts or database data.
+Slices A and B are implemented (migrations 009 and 010). The next code release is slice C.
+
+## 14. Agreed direction — 23 November 2026
+
+Recorded after reviewing two rounds of screen mock-ups. Where this section differs from earlier sections, this section wins. It describes intended behaviour only; nothing here is implemented yet.
+
+### Build order
+
+1. **One lane, no web app.** ST-1, FN-1 and LN-1 have passed synchronisation tests. Next: prove a single lane at the club (beam-to-timestamp latency, repeatability against a reference, outdoor conditions, ESP-NOW range, battery over a club night).
+2. **Four lanes.**
+3. **Lane readers (RFID).**
+4. **Web app** — slice C onwards, aimed first at what one club needs: club admin, base station, trackside session mode, results and recaps. Rider/Family portals and platform polish follow.
+
+### Four dashboards, one account
+
+- Four role dashboards: Platform administrator, Club administrator, Coach, Rider. One login may hold several roles; switching is a lightweight account menu, not a separate chooser screen most people ever see.
+- Guardian access is the Rider dashboard scoped to a linked child (child picker, child's name always visible, view only). It is designed in now and may launch later.
+- When one person both coaches a rider and is their guardian, the interface makes clear which role grants which access. Full history comes through the guardian link, not through coaching.
+
+### Three contexts
+
+| Context | Who | Character |
+| --- | --- | --- |
+| Trackside | Coach (session mode), riders (scoreboard), club admin (equipment check) | Full-screen, light, high contrast, large targets, minimal navigation; works on a tablet |
+| Desk | Club admin, coach, platform admin | Sidebar layout; planning, riders, results, administration |
+| Phone | Rider, guardian | Own times, bests by effort type, progress, session recaps; no administration or device terms |
+
+### Trackside
+
+- Sessions are planned as structure (for example 6 × 20 m flying, 3 min rest); riders run in heats of up to four lanes.
+- Coach session mode shows lanes, a rest timer, one primary action per step and a squad grid (riders × reps, gap to each rider's prior best, new bests marked, coach notes per effort).
+- A scoreboard view for a TV or tablet at the start shows the latest reveal, who is next and rest time. It lists new bests rather than a ranking; any ranking is a later, opt-in decision.
+- Lane colours are fixed everywhere — posts, lane displays, scoreboard and app: lane 1 `#FF5A36`, lane 2 `#3B82F6`, lane 3 `#FFC83D`, lane 4 `#22C3A6`. Lane numbers are always shown with the colour.
+
+### Two kinds of RFID reader
+
+| Reader | Where | Does | Never does |
+| --- | --- | --- | --- |
+| Base station | USB on the club laptop, under Riders & tags | Registers riders, links tags, replaces lost tags, batch-tags riders | Takes part in a session or timing |
+| Lane reader | A few metres behind each start line, in Flying, Standing and Open practice | A tap reserves that lane for one effort; the rider then rolls or walks to the line | Creates riders or assigns tags; unknown tags are rejected |
+
+A lane check-in is pending until the rider starts. It needs an expiry and a coach "clear" action. Wrong-lane and swapped-tag behaviour must be tested at the track before the trackside interface is finalised.
+
+### Rider onboarding
+
+- **Core fields, every club and sport:** display name, year of birth, who to invite (rider, guardian or nobody yet) with an email, a tick that the club's own permissions process is complete, and the tag (read by the base station, never typed).
+- **Club-defined optional fields:** up to two, labelled by the club (for example British Cycling licence, KNWU licentie, USA BMX membership). They point to the club's own records and are never used for identity or duplicate detection.
+- A tagged rider can ride immediately. No invitation has to be accepted first, and a rider with no linked account is normal rather than a warning state.
+- The registration desk is the guardian check: the admin enters the guardian's email with them present. The invitation is bound to one rider and one email, single-use and expiring, and can be resent from the rider record.
+- The invitee signs in, confirms the club-held details (read-only, with a "request a correction" route) and chooses how the rider's name appears on the scoreboard (first name and initial, initials only, or lane number only).
+
+### Club settings that keep SPLIT country- and sport-neutral
+
+- **Age rule chosen by sport:** for example age on 31 December, which needs only year of birth, or age on 31 August, which needs a full date of birth. A full date of birth is collected only when the club's age rule requires it.
+- **Invitation recipient by country and age band:** for example the UK preset is guardian only under 13, club's choice from 13 to 17, rider from 18. No age threshold is hard-coded. Presets must be checked against each country's rules before clubs there are onboarded.
+- **Default scoreboard name** until a family chooses.
+- **Terminology and units:** rider or athlete, km/h or mph. User-facing wording is kept in one place so translation is configuration later.
+
+### Decisions still open
+
+- Hosted service versus self-hosted open source. This determines who holds responsibility for children's data across jurisdictions, and must be settled before a second club is onboarded.
+- Heat size, rest defaults and set structures need checking against real coaching practice.
+- Whether to offer family pre-registration before a club night. Deferred; desk registration plus an invitation is sufficient for now.
+
+Reference mock-ups: the "JNS SPLIT — app mock-ups" design canvas, page "Round 2 — four dashboards". The mock-ups are illustrative; this section is the agreed record.

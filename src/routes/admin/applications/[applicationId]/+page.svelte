@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head><title>Review club application · JNS SPLIT</title></svelte:head>
-<main class="account-page wide">
+<div class="page-stack">
   <span class="eyebrow">PLATFORM ADMINISTRATION</span>
   <h1>Review application</h1>
   <a href="/admin">Back to applications</a>
@@ -50,4 +50,4 @@
         </label><button class="solid">Save decision</button>
       </form>
     </section>{:else}<p>This application is complete. Its decision cannot be overwritten.</p>{/if}
-</main>
+</div>

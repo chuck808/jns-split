@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head><title>My sessions · JNS SPLIT</title></svelte:head>
-<main class="account-page wide">
+<div class="page-stack">
   <h1>My assigned sessions</h1>
   <p>
     Only sessions explicitly assigned to you appear here. A club link alone does not grant session
@@ -12,4 +12,4 @@
   </p>
   <a class="text-link" href="/coach">Back to coach workspace</a>
   <section class="panel"><SessionList list={data.list} status={data.filters.status} /></section>
-</main>
+</div>

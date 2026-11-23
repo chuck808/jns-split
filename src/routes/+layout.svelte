@@ -1,21 +1,21 @@
 <script lang="ts">
+  import '@fontsource-variable/inter';
+  import '@fontsource/barlow-condensed/600.css';
+  import '@fontsource/barlow-condensed/700.css';
+  import '@fontsource/barlow-condensed/700-italic.css';
   import '../app.css';
-  import ThemeSelector from '#lib/components/ThemeSelector.svelte';
+  import { page } from '$app/state';
+  import SiteHeader from '#lib/ui/SiteHeader.svelte';
   let { children, data } = $props();
+  // Signed-in areas provide `shell` from their layout and render AppShell
+  // themselves; everything else gets the public site header.
+  const inApp = $derived(!!page.data.shell);
 </script>
 
-<a class="skip-link" href="#page-content">Skip to content</a>
-<div class="site-toolbar">
-  <a href="/" class="site-wordmark">JNS SPLIT</a>
-  <nav aria-label="Main navigation">
-    <a href="/app?choose=1">Workspaces</a><a href="/club">Club workspace</a><a href="/coach">
-      Coach workspace
-    </a><a href="/about"> About </a><a href="/help">Help</a><a href="/contact"> Contact </a><a
-      href="/account"
-    >
-      Account
-    </a>
-  </nav>
-  <ThemeSelector value={data.theme} />
-</div>
-<div id="page-content" tabindex="-1">{@render children()}</div>
+<a class="skip-link" href="#main">Skip to content</a>
+{#if inApp}
+  {@render children()}
+{:else}
+  <SiteHeader theme={data.theme} />
+  <div id="main" tabindex="-1">{@render children()}</div>
+{/if}

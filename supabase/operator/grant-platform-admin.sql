@@ -1,5 +1,7 @@
 -- OPERATOR ONLY: run separately in Supabase SQL Editor after migration 010.
 -- Replace both values. This is not a migration and is never run by the web app.
+-- Paste a filled-in copy straight into the SQL Editor, or save it as *.local.sql.
+-- Never commit the filled-in version: it names the platform administrator.
 do $$
 declare
  operator_email text := 'REPLACE_WITH_YOUR_CONFIRMED_ACCOUNT_EMAIL';

@@ -4,20 +4,19 @@ Sports timing · Every effort counts.
 
 A separate SvelteKit + TypeScript + Tailwind CSS + Flowbite Svelte app, configured with the Vercel adapter. This repository is the companion interface, not a sales site. Hardware stays in https://github.com/chuck808/jns-lanetime.
 
-## Current milestone: club registry + reader bench
+## Current milestone: workspaces and club admission
 
-Club administration now includes Supabase-backed sign-in, club creation, rider registration, tag issue/replacement/revocation, archiving and an audit trail. See [Supabase setup and acceptance](docs/supabase-setup.md). Coach access and live timing recording are still pending.
+Built so far (migrations 001–010):
 
-Bench simulator features:
+- **Accounts:** sign-in/out, password recovery, account page, light/dark/system theme, and `/app`, which opens the right workspace or offers a chooser.
+- **Roles:** independent admin and coach roles within a club; removing a coach role keeps a separate admin role and revokes that coach's session grants.
+- **Club admission:** verified accounts apply at `/clubs/request`; a platform administrator reviews at `/admin`. Direct club creation is disabled in the database. Existing pilot clubs are unaffected. The first platform administrator is appointed by an operator script, never by the app — see [club admission setup](docs/club-admission-setup.md).
+- **Club administration:** rider register, tag issue/replacement/revocation, coach invitations, session planning with view/edit coach grants, participants, and admin-only test equipment.
+- **Bench:** the browser-local simulator at `/bench`, Core2 USB scan ingestion and an isolated Core2 WiFi test endpoint.
 
-- Mobile-responsive charcoal/lime coach workspace.
-- Test rider/tag enrolment, full UID preservation, one to four enabled lanes.
-- Simulated check-in acceptance/rejection, idempotent retries, unarmed lane moves, and assignment locking at arm.
-- Simulated completed/cancelled/DNF runs; fresh scans required after each run.
-- Comparable personal session best/mean, time chart, average speed and CSV export.
-- Read-only Core2 USB scan ingestion (desktop Chrome/Edge) and pasted JSON fallback.
+Not built yet: rider and family portals, recorded results, administrator handover, production device pairing and live timing. See the [product experience specification](docs/product-experience-v1.md) for the delivery sequence.
 
-**Use fictional records during testing.** The simulator at `/bench` keeps its data in the current browser tab and loses it on refresh; exports are labelled SIMULATED. The separate `/club` register persists to Supabase when configured. Neither is connected to live timing or controller acknowledgement. The Core2 does not claim lane acceptance.
+**Use fictional records during testing.** The simulator at `/bench` keeps its data in the current browser tab and loses it on refresh; exports are labelled SIMULATED. Nothing is connected to live timing or controller acknowledgement. The Core2 does not claim lane acceptance.
 
 ## Club workspace
 
@@ -50,7 +49,7 @@ npm run build
 
 Use the included VS Code tasks, or the integrated terminal. The committed lockfile fixes the dependency versions. No environment variables are needed for the simulator. Club administration requires the setup linked above.
 
-## First walkthrough — before the reader arrives
+## Bench simulator walkthrough (`/bench`)
 
 1. Live session: tap Alex into lane 1; choose lane 2 and tap Sam.
 2. Try the unknown tag and an occupied lane: both should reject.
@@ -87,8 +86,7 @@ No Vercel project or deployment has been created by this scaffold. Preview URLs 
 
 See [development plan](docs/development-plan.md), [bench scan contract](docs/reader-contract.md) and [acceptance checklist](docs/acceptance.md).
 
-Supabase Auth, database migrations and club-level RLS are included for the registry pilot. Next: live project acceptance, coach grants and controller integration.
-
+Next: slice C (club and coach UX), then slice D (recorded results and account links). Slices are described in the [product experience specification](docs/product-experience-v1.md).
 
 ## Free-ride bench workflow
 

@@ -18,20 +18,20 @@ Public home is an entry point to the product, not a shop. No billing, subscripti
 
 | Area | Present | Gap before the intended experience |
 | --- | --- | --- |
-| Account | Sign-in/out, password recovery, account page; light/dark/system theme | Unified workspace resolver; account profile and managed invitations for new account types |
-| Club | Pilot club creation, overview counts, settings, paginated roster, tag lifecycle | Approved club registration, administrator handover, task-oriented home |
-| Coach | In-app invitations, approved club links, assigned sessions, view/edit grants | Unified coach home, multiple roles within one club; no broad rider-history access |
+| Account | Sign-in/out, password recovery, account page; light/dark/system theme; `/app` workspace resolver and chooser (migration 009) | Safe post-sign-in destination handling (§6 step 1); account profile and managed invitations for new account types |
+| Club | Reviewed club admission (migration 010), overview counts, settings, paginated roster, tag lifecycle; independent admin/coach roles | Administrator handover with last-admin protection, task-oriented home |
+| Coach | In-app invitations, approved club links, assigned sessions, view/edit grants; coach role independent of a same-club admin role | Unified coach home; no broad rider-history access |
 | Session planning | Coached/free-ride policy, distance, start type, lanes, participants, close/cancel | Actual operational session lifecycle and controller state |
 | Equipment | Expiring test credentials, Core2 WiFi simulator, admin-only lane monitor | Production device pairing, real health/acknowledgements, friendly operational controls |
 | Rider | Club-owned record, optional tag, no login required | Account-to-rider linkage, personal portal, recorded results |
 | Guardian | No implementation | Club-approved links to specific children and Family view |
-| Platform | No application-level platform role or dashboard | Role bootstrap, club application review, controlled support and operational monitoring |
+| Platform | Operator-appointed platform role with audit, `/admin` overview, application review with atomic approve/decline | Controlled support access and operational monitoring |
 | Results | Browser-local simulation; test lane monitor creates no results | Immutable measured attempts, result permissions, rider charts and comparisons |
-| Public | Home, About, Help, Contact page | Club application journey; configured contact delivery and approved notices |
+| Public | Home, About, Help, Contact page; club application journey at `/clubs/request` | Configured contact delivery and approved notices |
 
-Source areas checked: routes under `/club`, `/coach`, `/sessions`, `/account`, `/bench`; migrations 001–008; server access helpers. Existing production-like club data and isolated simulator tables must stay separate.
+Source areas checked (updated 23 November 2026, after slices A and B): routes under `/app`, `/admin`, `/clubs`, `/club`, `/coach`, `/sessions`, `/account`, `/bench`; migrations 001–010; server access helpers. Existing production-like club data and isolated simulator tables must stay separate.
 
-Two important existing constraints:
+Two constraints that shaped slices A and B (both now addressed in migrations 009 and 010):
 
 - `club_memberships` currently has one `(club_id,user_id)` row with a single `admin` or `coach` role. Coach queries often explicitly require `role='coach'`. An admin currently operates through admin permissions, not a separate same-club coach role.
 - `create_club` still permits an authenticated user with no memberships to create a pilot club. Public registration must replace that entitlement in the database, not merely hide the button. Existing approved pilot clubs must remain intact.
@@ -262,4 +262,4 @@ Each slice is a separate tested patch. Do not combine access-control changes, al
 
 These do not block the workspace/design foundation: initial platform operator account; signup/invitation email delivery and support destination; rider-account eligibility and guardian verification wording; transfer and historical access policy; retention/deletion rules; suspension and support-recovery procedure. No arbitrary legal, age or retention rules are introduced by this document.
 
-The next code release is slice A. This document-only release changes no runtime permissions, user accounts or database data.
+Slices A and B are implemented (migrations 009 and 010). The next code release is slice C.

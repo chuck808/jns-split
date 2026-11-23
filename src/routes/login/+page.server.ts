@@ -34,6 +34,6 @@ export const actions: Actions = {
       });
     }
 
-    redirect(303, '/club');
+    redirect(303, '/app');
   }
 };

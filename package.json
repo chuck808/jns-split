@@ -23,7 +23,8 @@
     "@fontsource/barlow-condensed": "^5.3.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.2",
-    "flowbite-svelte": "^1.33.1"
+    "flowbite-svelte": "^1.33.1",
+    "nodemailer": "^10.6.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.17",
@@ -32,6 +33,7 @@
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@tailwindcss/vite": "^4.3.5",
     "@types/node": "^26.6.6",
+    "@types/nodemailer": "^8.0.2",
     "prettier": "^3.10.1",
     "prettier-plugin-svelte": "^4.2.0",
     "svelte": "^5.58.0",

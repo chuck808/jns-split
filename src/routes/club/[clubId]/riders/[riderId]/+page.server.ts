@@ -2,12 +2,27 @@ import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireAdmin } from '#lib/server/access';
 import { emailAddress, uuid } from '#lib/coaches';
-import { familyError, isKind, type RiderAccess } from '#lib/family';
+import { familyError, isKind, type LinkKind, type RiderAccess } from '#lib/family';
+import { invitationNotice, sendInvitation } from '#lib/server/mail';
 
 async function admin(event: RequestEvent) {
   const { client } = await requireAdmin(event, event.params.clubId);
   if (!uuid(event.params.riderId)) error(404, 'Rider not found.');
   return client;
+}
+async function emailInvite(
+  event: RequestEvent,
+  client: Awaited<ReturnType<typeof admin>>,
+  kind: LinkKind,
+  email: string
+) {
+  if (!event.locals.mailer) return 'off' as const;
+  const { data: club } = await client
+    .from('clubs')
+    .select('name')
+    .eq('id', event.params.clubId)
+    .single();
+  return sendInvitation(event.locals.mailer, kind, club?.name ?? 'Your club', email);
 }
 async function idFrom(event: RequestEvent, field: string) {
   const id = String((await event.request.formData()).get(field) ?? '');
@@ -22,7 +37,7 @@ export const load: PageServerLoad = async (event) => {
   if (problem?.code === '42501') error(404, 'Rider not found.');
   if (problem)
     error(503, 'Unable to load family access. Apply the family access migration (012) first.');
-  return { access: data as RiderAccess };
+  return { access: data as RiderAccess, emailOn: !!event.locals.mailer };
 };
 
 export const actions: Actions = {
@@ -45,10 +60,8 @@ export const actions: Actions = {
       p_checked: true
     });
     if (error) return fail(400, { message: familyError(error.code), ok: false });
-    return {
-      message: `Invitation created for ${email}. No email is sent yet: ask them to sign in with that address within seven days.`,
-      ok: true
-    };
+    const outcome = await emailInvite(event, client, kind, email);
+    return { message: invitationNotice(outcome, email, 'Riders and family'), ok: true };
   },
   renew: async (event) => {
     const client = await admin(event);
@@ -56,7 +69,22 @@ export const actions: Actions = {
     if (!id) return fail(400, { message: 'Invalid invitation.', ok: false });
     const { error } = await client.rpc('renew_rider_invitation', { p_invitation_id: id });
     if (error) return fail(400, { message: familyError(error.code), ok: false });
-    return { message: 'Invitation renewed for seven more days.', ok: true };
+    if (!event.locals.mailer)
+      return { message: 'Invitation renewed for seven more days.', ok: true };
+    // Email the renewed invitation again, using the address and kind the club holds.
+    const { data } = await client
+      .from('rider_invitations')
+      .select('email, kind')
+      .eq('id', id)
+      .single();
+    const outcome = data ? await emailInvite(event, client, data.kind, data.email) : 'failed';
+    return {
+      message:
+        outcome === 'sent'
+          ? `Invitation renewed for seven more days and emailed again to ${data?.email}.`
+          : 'Invitation renewed for seven more days, but the email couldn’t be sent. Let them know yourself.',
+      ok: true
+    };
   },
   revoke: async (event) => {
     const client = await admin(event);

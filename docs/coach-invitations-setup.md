@@ -30,7 +30,7 @@ Use fictional test accounts and riders.
 1. In Supabase Authentication → Users, ensure you have a separate coach test account with a password and confirmed email. The project owner still provisions new accounts in this pilot; club administrators do not receive global Supabase account-management access. Keep public sign-up disabled.
 2. Sign into JNS SPLIT as your club administrator. Open your club → **Coaches**.
 3. Enter the exact email of the coach test account and choose **Create invitation**. The invitation should appear as pending, with a seven-day expiry.
-4. **No email is sent.** Tell the coach to sign in to the same installation and select **Coach workspace** in the top navigation. Invitations are addressed to the verified account, so there is no secret invitation link to copy.
+4. If invitation emails are set up (see `email-and-sign-up-setup.md`, step 5), the coach gets an email with sign-in and sign-up links. Otherwise tell the coach to sign in to the same installation and select **Coach workspace** in the top navigation. Invitations are addressed to the verified account, so there is no secret invitation link to copy.
 5. For local testing, use a separate browser profile/private window for the coach, or sign out of the administrator account first. Signing into two tabs of the same browser profile shares the login cookies.
 6. After coach login, the club chooser highlights pending invitations. Open Coach workspace and accept. The club appears in Your approved clubs, and the administrator's Coaches page shows the accepted membership.
 7. As coach, try opening the administrator's club overview or riders URL. It must remain inaccessible. An accepted club link is not a rider-history or session grant.

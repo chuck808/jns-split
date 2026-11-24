@@ -41,9 +41,10 @@
     <ol class="steps">
       <li>The invitation lasts seven days and only works for that email address.</li>
       <li>
-        No email is sent yet. Tell the coach to sign in, or create an account at
-        <strong>/signup</strong>, with that address, then open <strong>Coach</strong> from the account
-        menu, where the invitation is waiting.
+        {data.emailOn
+          ? 'We email the coach a link. They sign in, or create an account, with that address and open'
+          : 'No email is sent from this installation. Tell the coach to sign in, or create an account at /signup, with that address and open'}
+        <strong>Coach</strong> from the account menu, where the invitation is waiting.
       </li>
       <li>Once they accept, add them to sessions from each session’s page.</li>
     </ol>

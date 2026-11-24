@@ -114,8 +114,10 @@
       <ol class="steps">
         <li>The invitation works once, for that email only, and lasts seven days.</li>
         <li>
-          No email is sent yet. Ask them to sign in, or create an account at
-          <strong>/signup</strong>, with that address, then open <strong>Riders and family</strong>.
+          {data.emailOn
+            ? 'We email them a link. They sign in, or create an account, with that address and open'
+            : 'No email is sent from this installation. Ask them to sign in, or create an account at /signup, with that address and open'}
+          <strong>Riders and family</strong>.
         </li>
         <li>
           Once they accept, they see {rider.display_name}’s details and choose how their name shows
@@ -167,7 +169,9 @@
           <div class="actions">
             <form method="POST" action="?/renew">
               <input type="hidden" name="invitationId" value={invite.id} />
-              <Button type="submit">Renew for 7 days</Button>
+              <Button type="submit">
+                {data.emailOn ? 'Renew and email again' : 'Renew for 7 days'}
+              </Button>
             </form>
             <form method="POST" action="?/revoke">
               <input type="hidden" name="invitationId" value={invite.id} />

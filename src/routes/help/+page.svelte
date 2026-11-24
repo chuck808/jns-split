@@ -78,7 +78,7 @@
     <div class="block">
       <h3>For parents and riders</h3>
       <p>
-        Sign in, or create an account, with the email the club used. Open
+        Sign in with the email the club used. Open
         <strong>Riders and family</strong> and accept. You’ll see the details the club holds, can ask
         for a correction, and can choose how the name appears on the scoreboard. Each child needs their
         own invitation.

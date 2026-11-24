@@ -17,14 +17,14 @@ unchanged. Riders never need an account to ride.
   - Linked people are listed with a **Remove access** option. Removing one link leaves their
     other riders untouched.
   - Correction requests from families appear on that page, and as a notice on Riders & tags.
-- **Parent, guardian or rider:** signs in (or creates an account) with the invited email, opens
+- **Parent, guardian or rider:** signs in with the invited email (there is no sign-up page yet: for testing, create the account in Supabase under Authentication → Users → Add user, with "Auto Confirm User" ticked), opens
   **Riders and family** from the account menu, and accepts. They see:
   - the details the club holds (read-only), with a way to ask the club for a correction;
   - a choice of how the name appears on the scoreboard (until they choose, the club default
     applies);
   - a "No results yet" panel. Results arrive once lane timing records them.
-  A guardian with two children sees a picker; each child needs their own invitation. They never
-  see the club register, other riders, or tag numbers.
+    A guardian with two children sees a picker; each child needs their own invitation. They never
+    see the club register, other riders, or tag numbers.
 
 Every change is checked in the database and recorded in the club's history.
 

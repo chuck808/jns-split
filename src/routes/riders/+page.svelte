@@ -7,10 +7,13 @@
   import StatusChip from '#lib/ui/StatusChip.svelte';
   import { scoreboardPreview } from '#lib/family';
   import { SCOREBOARD_NAMES } from '#lib/rider-details';
+  import { OUTCOME_LABELS, averageSpeed, groupLabel, seconds } from '#lib/results';
+  import { formatTime } from '#lib/ui/format';
   let { data, form } = $props();
   const ws = $derived(data.workspace);
   const rider = $derived(data.selected);
   const self = $derived(rider?.kind === 'rider');
+  const latest = $derived(data.results?.efforts[0] ?? null);
   let scoreboard = $derived(rider?.scoreboard_name ?? 'first_initial');
   const day = (value: string) =>
     new Date(value).toLocaleDateString('en-GB', {
@@ -103,10 +106,78 @@
 
   <div class="grid">
     <Card title="Results">
-      <EmptyState title="No results yet">
-        {self ? 'Your' : `${rider.display_name}’s`} times will appear here after the first recorded session.
-        Timing at the club is still being tested.
-      </EmptyState>
+      {#if !latest}
+        <EmptyState title="No results yet">
+          {self ? 'Your' : `${rider.display_name}’s`} times will appear here after the first recorded
+          session.
+        </EmptyState>
+      {:else}
+        <div class="results">
+          <section class="latest" aria-label="Most recent effort">
+            <span class="label">Most recent</span>
+            <span class="big">
+              {latest.outcome === 'completed'
+                ? `${formatTime(seconds(latest.elapsed_ms))}s`
+                : OUTCOME_LABELS[latest.outcome]}
+            </span>
+            <span class="note">
+              {groupLabel(latest)} · {latest.session_name} · {day(latest.recorded_at)}
+              {#if latest.outcome === 'completed'}
+                · {averageSpeed(latest.distance_metres, latest.elapsed_ms)} km/h average{/if}
+            </span>
+          </section>
+          {#if data.results?.groups.length}
+            <section aria-label="Best times">
+              <span class="label">Best times</span>
+              <ul class="bests">
+                {#each data.results.groups as g (groupLabel(g))}
+                  <li>
+                    <span>{groupLabel(g)}</span>
+                    <span class="note">
+                      {g.valid_count}
+                      {g.valid_count === 1 ? 'effort' : 'efforts'}
+                    </span>
+                    <strong class="time">{formatTime(seconds(g.best_ms))}s</strong>
+                  </li>
+                {/each}
+              </ul>
+            </section>
+          {/if}
+        </div>
+        <details class="all">
+          <summary>All efforts ({data.results?.efforts.length})</summary>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Session</th>
+                  <th scope="col">Effort</th>
+                  <th scope="col" class="num">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each data.results?.efforts ?? [] as e (e.id)}
+                  <tr>
+                    <td>{day(e.recorded_at)}</td>
+                    <td>{e.session_name}</td>
+                    <td>{groupLabel(e)}</td>
+                    <td class="num">
+                      {e.outcome === 'completed'
+                        ? `${formatTime(seconds(e.elapsed_ms))}s`
+                        : OUTCOME_LABELS[e.outcome]}
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <p class="note">
+          Best times compare like with like: the same distance and start type. Average speed is over
+          the whole distance, not a top speed.
+        </p>
+      {/if}
     </Card>
 
     <Card title="Name on the scoreboard">
@@ -288,10 +359,84 @@
   textarea {
     width: 100%;
   }
+  .results {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .results section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .big {
+    font: italic 800 3.5rem/1 var(--font-display);
+    font-variant-numeric: tabular-nums;
+  }
+  .bests {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .bests li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--raised);
+    border-radius: var(--radius);
+  }
+  .bests li span:first-child {
+    flex: 1;
+  }
+  .time {
+    font: italic 700 1.5rem var(--font-display);
+    font-variant-numeric: tabular-nums;
+  }
+  .all {
+    margin-top: 1rem;
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--edge);
+    white-space: nowrap;
+  }
+  th {
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
   .leave {
     margin-top: 1.5rem;
   }
   @media (max-width: 760px) {
+    .results {
+      grid-template-columns: minmax(0, 1fr);
+    }
     .grid {
       grid-template-columns: minmax(0, 1fr);
     }

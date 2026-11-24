@@ -28,13 +28,19 @@ test('coach page responses never fetch eligible club riders or the admin coach d
                 },
                 error: null
               };
+            // Results are permission-checked in the database for the session's coaches.
+            if (name === 'session_results') return { data: [], error: null };
             throw new Error('Unexpected privileged fetch: ' + name);
           }
         }
       }
     };
     const data = (await load(event as any)) as any;
-    assert.deepEqual(calls, ['training_session_detail', 'list_session_participants']);
+    assert.deepEqual(calls, [
+      'training_session_detail',
+      'list_session_participants',
+      'session_results'
+    ]);
     assert.equal(data.candidates, null);
     assert.equal(data.directory, null);
     assert.equal(data.participants.items[0].display_name, 'Jamie808');
@@ -64,11 +70,17 @@ test('free-ride admin page does not fetch candidates for manual enrolment', asyn
             return { data: { coaches: [], page: 1, pages: 1 }, error: null };
           if (name === 'list_session_participants')
             return { data: { items: [], total: 0, page: 1, pages: 1 }, error: null };
+          if (name === 'session_results') return { data: [], error: null };
           throw new Error('Unexpected manual enrolment fetch: ' + name);
         }
       }
     }
   } as any)) as any;
   assert.equal(data.candidates, null);
-  assert.deepEqual(calls, ['training_session_detail', 'club_coaches', 'list_session_participants']);
+  assert.deepEqual(calls, [
+    'training_session_detail',
+    'club_coaches',
+    'list_session_participants',
+    'session_results'
+  ]);
 });

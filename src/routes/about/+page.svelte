@@ -22,7 +22,7 @@
   const progress = [
     {
       title: 'Working now',
-      text: 'Club registration, riders and tags, coaches and access, family access, and session planning.'
+      text: 'Club registration, riders and tags, coaches and access, family access, session planning, and storing results from timing equipment.'
     },
     {
       title: 'Testing next',
@@ -30,7 +30,7 @@
     },
     {
       title: 'After that',
-      text: 'Recorded results and progress over time, then more lanes and more sports.'
+      text: 'Lane check-in, progress charts over time, then more lanes and more sports.'
     }
   ];
 </script>

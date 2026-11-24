@@ -6,12 +6,13 @@ A separate SvelteKit + TypeScript + Tailwind CSS + Flowbite Svelte app, configur
 
 ## Current milestone: workspaces and club admission
 
-Built so far (migrations 001–010):
+Built so far (migrations 001–011):
 
 - **Accounts:** sign-in/out, password recovery, account page, light/dark/system theme, and `/app`, which opens the right workspace or offers a chooser.
 - **Roles:** independent admin and coach roles within a club; removing a coach role keeps a separate admin role and revokes that coach's session grants.
 - **Club admission:** verified accounts apply at `/clubs/request`; a platform administrator reviews at `/admin`. Direct club creation is disabled in the database. Existing pilot clubs are unaffected. The first platform administrator is appointed by an operator script, never by the app — see [club admission setup](docs/club-admission-setup.md).
 - **Club administration:** rider register, tag issue/replacement/revocation, coach invitations, session planning with view/edit coach grants, participants, and admin-only test equipment.
+- **Rider details:** year of birth on every new rider, up to two club-defined fields, and club settings for age groups, invitation age bands and scoreboard names — see [rider details setup](docs/rider-details-setup.md).
 - **Bench:** the browser-local simulator at `/bench`, Core2 USB scan ingestion and an isolated Core2 WiFi test endpoint.
 
 Not built yet: rider and family portals, recorded results, administrator handover, production device pairing and live timing. See the [product experience specification](docs/product-experience-v1.md) for the delivery sequence.

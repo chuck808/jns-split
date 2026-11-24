@@ -30,7 +30,7 @@ export const actions: Actions = {
     if (error) return fail(400, { message: coachError(error.code), ok: false });
     return {
       message:
-        'Invitation created. No email has been sent. Ask the coach to sign in and open Coach workspace within seven days.',
+        'Invitation created. No email has been sent. Ask the coach to sign in (or create an account at /signup) with that address and open Coach within seven days.',
       ok: true
     };
   },

@@ -3,27 +3,40 @@
   import Card from '#lib/ui/Card.svelte';
   import PublicPage from '#lib/ui/PublicPage.svelte';
   let { data, form } = $props();
+  const kind = $derived(form?.kind ?? data.kind);
 </script>
 
 <svelte:head>
-  <title>Confirm password reset · JNS SPLIT</title><meta name="referrer" content="same-origin" />
+  <title>{kind === 'signup' ? 'Confirm your email' : 'Confirm password reset'} · JNS SPLIT</title>
+  <meta name="referrer" content="same-origin" />
 </svelte:head>
 
 <PublicPage width="narrow">
-  <h1>Reset your password</h1>
+  <h1>{kind === 'signup' ? 'Confirm your email' : 'Reset your password'}</h1>
   <Card>
     {#if data.ready && !form?.message}
-      <p>Continue to check your email link and choose a new password.</p>
+      <p>
+        {kind === 'signup'
+          ? 'One more step: confirm this is your email address and you’ll be signed in.'
+          : 'Continue to check your email link and choose a new password.'}
+      </p>
       <form method="POST">
-        <Button type="submit" variant="primary" size="lg" full>Continue</Button>
+        <Button type="submit" variant="primary" size="lg" full>
+          {kind === 'signup' ? 'Confirm and sign in' : 'Continue'}
+        </Button>
       </form>
     {:else}
       <p role="alert">
-        {form?.message ?? 'This link is missing or has expired. Ask for a new reset email.'}
+        {form?.message ??
+          'This link is missing or has expired. Open the newest email we sent, or ask for another.'}
       </p>
     {/if}
   </Card>
-  <a class="center" href="/forgot-password">Send another link</a>
+  {#if kind === 'signup'}
+    <a class="center" href="/signup">Send another confirmation link</a>
+  {:else}
+    <a class="center" href="/forgot-password">Send another reset link</a>
+  {/if}
 </PublicPage>
 
 <style>

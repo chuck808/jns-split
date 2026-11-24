@@ -41,7 +41,8 @@
     <ol class="steps">
       <li>The invitation lasts seven days and only works for that email address.</li>
       <li>
-        No email is sent yet — tell the coach to sign in and open <strong>Coach</strong> from the account
+        No email is sent yet. Tell the coach to sign in, or create an account at
+        <strong>/signup</strong>, with that address, then open <strong>Coach</strong> from the account
         menu, where the invitation is waiting.
       </li>
       <li>Once they accept, add them to sessions from each session’s page.</li>

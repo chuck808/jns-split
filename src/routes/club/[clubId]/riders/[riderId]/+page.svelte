@@ -114,9 +114,8 @@
       <ol class="steps">
         <li>The invitation works once, for that email only, and lasts seven days.</li>
         <li>
-          No email is sent yet. Ask them to sign in with that address and open
-          <strong>Riders and family</strong>. There’s no sign-up page yet, so they need an account
-          first.
+          No email is sent yet. Ask them to sign in, or create an account at
+          <strong>/signup</strong>, with that address, then open <strong>Riders and family</strong>.
         </li>
         <li>
           Once they accept, they see {rider.display_name}’s details and choose how their name shows

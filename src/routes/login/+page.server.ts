@@ -8,8 +8,7 @@ export const load: PageServerLoad = ({ locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, locals }) => {
-    if (!locals.supabase)
-      return fail(503, { message: 'Club storage is not configured yet.' });
+    if (!locals.supabase) return fail(503, { message: 'Club storage is not configured yet.' });
 
     const form = await request.formData();
     const email = String(form.get('email') ?? '').trim();

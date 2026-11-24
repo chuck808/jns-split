@@ -10,7 +10,7 @@ export const faqs = [
   },
   {
     q: 'Is it ready?',
-    a: 'Not fully. Club registration, riders and tags, coaches, family access and session planning work today. Timing at the lanes and recorded results come next, starting with a single-lane test at a club.'
+    a: 'Not fully. Club registration, riders and tags, coaches, family access and session planning work today. The app can also store results sent by timing equipment. Connecting the timing hardware itself comes next, starting with a single-lane test at a club.'
   },
   {
     q: 'Do riders need a phone or an account?',

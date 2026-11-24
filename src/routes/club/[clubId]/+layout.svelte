@@ -8,6 +8,7 @@
     { href: `${base}/sessions`, label: 'Sessions', prefix: true },
     { href: `${base}/riders`, label: 'Riders & tags', prefix: true },
     { href: `${base}/coaches`, label: 'Coaches & access', prefix: true },
+    { href: `${base}/timing`, label: 'Timing controllers', prefix: true },
     { href: `${base}/equipment`, label: 'Test equipment', prefix: true },
     { href: `${base}/settings`, label: 'Settings', prefix: true },
     { href: '/bench', label: 'Bench simulator' }

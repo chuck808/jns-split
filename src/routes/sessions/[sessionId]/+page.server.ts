@@ -2,6 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireUser } from '#lib/server/access';
 import { uuid, type ClubCoaches } from '#lib/coaches';
+import type { SessionEffort } from '#lib/results';
 import {
   participantFilters,
   participantError,
@@ -65,9 +66,12 @@ export const load: PageServerLoad = async (event) => {
       );
     candidates = result.data as CandidatePage;
   }
+  // Before migration 013 there are no results to show.
+  const results = await client.rpc('session_results', { p_session_id: event.params.sessionId });
   return {
     detail,
     directory,
+    results: (results.error ? null : results.data) as SessionEffort[] | null,
     participants: participantResult.data as ParticipantPage,
     candidates,
     participantFilters: filters

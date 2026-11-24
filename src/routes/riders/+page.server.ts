@@ -4,6 +4,7 @@ import { requireUser } from '#lib/server/access';
 import { uuid } from '#lib/coaches';
 import { familyError, type RiderWorkspace } from '#lib/family';
 import { SCOREBOARD_NAMES } from '#lib/rider-details';
+import type { RiderResults } from '#lib/results';
 
 export const load: PageServerLoad = async (event) => {
   const { client } = requireUser(event);
@@ -14,7 +15,13 @@ export const load: PageServerLoad = async (event) => {
   const wanted = event.url.searchParams.get('rider');
   const selected =
     workspace.riders.find((r) => r.rider_id === wanted) ?? workspace.riders[0] ?? null;
-  return { workspace, selected };
+  let results: RiderResults | null = null;
+  if (selected) {
+    // Before migration 013 there are simply no results yet.
+    const r = await client.rpc('rider_results', { p_rider_id: selected.rider_id });
+    if (!r.error) results = r.data as RiderResults;
+  }
+  return { workspace, selected, results };
 };
 
 export const actions: Actions = {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import SessionFields from '#lib/components/SessionFields.svelte';
   import SessionParticipants from '#lib/components/SessionParticipants.svelte';
+  import SessionResults from '#lib/components/SessionResults.svelte';
   import { sessionDate, activityLabel } from '#lib/training-sessions';
   import Button from '#lib/ui/Button.svelte';
   import Card from '#lib/ui/Card.svelte';
@@ -60,10 +61,12 @@
     </div>
   </dl>
   <p class="note">
-    Your access: <strong>{access}</strong>. This is a plan — rider check-in, timing and results
-    aren’t connected yet.
+    Your access: <strong>{access}</strong>. Results appear below as timing equipment saves them;
+    rider check-in at the lanes isn’t connected yet.
   </p>
 </Card>
+
+<SessionResults efforts={data.results} distance={Number(session.distance_metres)} />
 
 {#if data.detail.canManage && session.status === 'planned'}
   <Card title="Edit plan">

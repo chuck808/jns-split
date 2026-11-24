@@ -7,7 +7,15 @@ export function rosterFilters(params: URLSearchParams) {
   return { query, status, page };
 }
 export interface Roster {
-  riders: { id: string; display_name: string; archived_at: string | null }[];
+  riders: {
+    id: string;
+    display_name: string;
+    archived_at: string | null;
+    birth_year: number | null;
+    birth_date: string | null;
+  }[];
+  /** Values for the club's active extra fields, for the riders on this page. */
+  fieldValues: { rider_id: string; field_id: string; value: string }[];
   tags: {
     id: string;
     rider_id: string;

@@ -8,6 +8,7 @@
   import PageHeader from '#lib/ui/PageHeader.svelte';
   import StatusChip from '#lib/ui/StatusChip.svelte';
   import { tagSuffix } from '#lib/ui/format';
+  import RiderDetailsFields from '#lib/components/RiderDetailsFields.svelte';
 
   let { data, form } = $props();
   let selectedId = $state('');
@@ -24,6 +25,22 @@
 
   let activeTags = $derived(data.tags.filter((t) => !t.revoked_at));
   const activeTag = (id: string) => activeTags.find((t) => t.rider_id === id);
+  const fieldValues = (id: string) =>
+    Object.fromEntries(
+      data.fieldValues.filter((v) => v.rider_id === id).map((v) => [v.field_id, v.value])
+    );
+  const born = (r: { birth_year: number | null; birth_date: string | null }) =>
+    r.birth_date
+      ? 'Born ' +
+        new Date(r.birth_date + 'T00:00:00Z').toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'UTC'
+        })
+      : r.birth_year
+        ? `Born ${r.birth_year}`
+        : null;
   const time = (value: string) =>
     new Date(value).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 
@@ -131,8 +148,15 @@
     </p>
     <form method="POST" action="?/register" class="stack">
       <label>
-        Display name<input name="name" required maxlength="60" autocomplete="off" />
+        Display name<input
+          name="name"
+          required
+          maxlength="60"
+          autocomplete="off"
+          placeholder="How the rider appears, e.g. Alex M."
+        />
       </label>
+      <RiderDetailsFields settings={data.riderSettings} />
       <label>
         Tag (optional — read it with the base station)<input
           name="uid"
@@ -184,7 +208,12 @@
               {@const tag = activeTag(rider.id)}
               <tr class:current={rider.id === selectedId}>
                 <th scope="row">
-                  {rider.display_name}<span class="mobile-meta">
+                  {rider.display_name}
+                  {#if born(rider)}<span class="born">{born(rider)}</span>
+                  {:else if !rider.archived_at}<span class="born missing">
+                      No year of birth
+                    </span>{/if}
+                  <span class="mobile-meta">
                     {rider.archived_at
                       ? 'Archived'
                       : tag
@@ -236,6 +265,48 @@
         </h2>
         <Button variant="quiet" onclick={() => (selectedId = '')}>Close</Button>
       </div>
+      {#if !selected.archived_at}
+        <details class="edit" open={!selected.birth_year}>
+          <summary>
+            {selected.birth_year ? 'Edit details' : 'Add year of birth and details'}
+          </summary>
+          {#key selected.id}
+            <form method="POST" action="?/details" class="stack">
+              <input type="hidden" name="riderId" value={selected.id} />
+              <label>
+                Display name<input
+                  name="name"
+                  required
+                  maxlength="60"
+                  autocomplete="off"
+                  value={selected.display_name}
+                />
+              </label>
+              <RiderDetailsFields
+                settings={data.riderSettings}
+                birthYear={selected.birth_year}
+                birthDate={selected.birth_date}
+                values={fieldValues(selected.id)}
+              />
+              <div><Button type="submit" variant="primary">Save details</Button></div>
+            </form>
+          {/key}
+        </details>
+        {#if data.riderSettings.fields.length || born(selected)}
+          <dl class="facts">
+            {#if born(selected)}<div>
+                <dt>Born</dt>
+                <dd>{born(selected)?.replace('Born ', '')}</dd>
+              </div>{/if}
+            {#each data.riderSettings.fields as field (field.id)}
+              <div>
+                <dt>{field.label}</dt>
+                <dd>{fieldValues(selected.id)[field.id] || '—'}</dd>
+              </div>
+            {/each}
+          </dl>
+        {/if}
+      {/if}
       {#if selected.archived_at}
         <StatusChip>Archived</StatusChip>
         <p class="hint">Archived riders can’t receive tags. Their records stay with the club.</p>
@@ -469,6 +540,37 @@
   }
   .mobile-meta {
     display: none;
+  }
+  .born {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .born.missing {
+    color: var(--warn-text);
+  }
+  .edit {
+    margin: 0;
+  }
+  .edit .stack {
+    margin-top: 0.75rem;
+  }
+  .facts {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  .facts dt {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  .facts dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
   @media (max-width: 600px) {
     .wide-only {

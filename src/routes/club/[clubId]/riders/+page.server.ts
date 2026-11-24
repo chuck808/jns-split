@@ -3,6 +3,29 @@ import type { Actions, PageServerLoad } from './$types';
 import { requireAdmin, messageForDatabaseError } from '#lib/server/access';
 import { normalizeUid } from '#lib/session';
 import { rosterFilters, type Roster } from '#lib/club-workspace';
+import { riderDetailsFromForm, type RiderSettings } from '#lib/rider-details';
+import type { RequestEvent } from '@sveltejs/kit';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+async function loadSettings(client: SupabaseClient, clubId: string) {
+  const { data, error: problem } = await client.rpc('rider_settings', { p_club_id: clubId });
+  if (problem)
+    error(503, 'Unable to load rider settings. Apply the rider details migration (011) first.');
+  return data as RiderSettings;
+}
+const detailsMessage = (code: string) =>
+  code === '22023'
+    ? 'Check the name, year or date of birth, and any required fields.'
+    : messageForDatabaseError(code);
+async function clubRider(client: SupabaseClient, event: RequestEvent, id: string) {
+  const { data } = await client!
+    .from('riders')
+    .select('id')
+    .eq('id', id)
+    .eq('club_id', event.params.clubId!)
+    .maybeSingle();
+  return !!data;
+}
 export const load: PageServerLoad = async (event) => {
   const { client } = await requireAdmin(event, event.params.clubId);
   const filters = rosterFilters(event.url.searchParams);
@@ -14,7 +37,9 @@ export const load: PageServerLoad = async (event) => {
   });
   if (problem)
     error(503, 'Unable to load riders. Check the club workspace migration has been applied.');
-  return { ...(data as Roster), filters };
+  const riderSettings = await loadSettings(client, event.params.clubId);
+  const roster = data as Roster;
+  return { ...roster, fieldValues: roster.fieldValues ?? [], filters, riderSettings };
 };
 export const actions: Actions = {
   register: async (event) => {
@@ -24,6 +49,8 @@ export const actions: Actions = {
     const rawUid = String(form.get('uid') ?? '').trim();
     if (!name || name.length > 60)
       return fail(400, { message: 'Enter a rider display name of 1–60 characters.', ok: false });
+    const details = riderDetailsFromForm(form, await loadSettings(client, event.params.clubId));
+    if (!details.ok) return fail(400, { message: details.message, ok: false });
     let uid: string | null = null;
     try {
       if (rawUid) uid = normalizeUid(rawUid);
@@ -33,13 +60,42 @@ export const actions: Actions = {
         ok: false
       });
     }
-    const { error } = await client.rpc('register_rider', {
+    const { error } = await client.rpc('register_rider_with_details', {
       p_club_id: event.params.clubId,
       p_name: name,
+      p_birth_year: details.value.birthYear,
+      p_birth_date: details.value.birthDate,
+      p_fields: details.value.fields,
       p_uid: uid
     });
-    if (error) return fail(400, { message: messageForDatabaseError(error.code), ok: false });
-    return { message: 'Rider registered and saved to the club.', ok: true };
+    if (error) return fail(400, { message: detailsMessage(error.code), ok: false });
+    return {
+      message: uid
+        ? `${name} is registered and their tag works straight away.`
+        : `${name} is registered. Give them a tag with Manage.`,
+      ok: true
+    };
+  },
+  details: async (event) => {
+    const { client } = await requireAdmin(event, event.params.clubId);
+    const form = await event.request.formData();
+    const id = String(form.get('riderId') ?? '');
+    const name = String(form.get('name') ?? '').trim();
+    if (!(await clubRider(client, event, id)))
+      return fail(400, { message: 'Rider not found in this club.', ok: false });
+    if (!name || name.length > 60)
+      return fail(400, { message: 'Enter a rider display name of 1–60 characters.', ok: false });
+    const details = riderDetailsFromForm(form, await loadSettings(client, event.params.clubId));
+    if (!details.ok) return fail(400, { message: details.message, ok: false });
+    const { error } = await client.rpc('update_rider_details', {
+      p_rider_id: id,
+      p_name: name,
+      p_birth_year: details.value.birthYear,
+      p_birth_date: details.value.birthDate,
+      p_fields: details.value.fields
+    });
+    if (error) return fail(400, { message: detailsMessage(error.code), ok: false });
+    return { message: `${name}’s details are saved.`, ok: true };
   },
   tag: async (event) => {
     const { client } = await requireAdmin(event, event.params.clubId);

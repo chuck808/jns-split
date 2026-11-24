@@ -17,7 +17,7 @@ unchanged. Riders never need an account to ride.
   - Linked people are listed with a **Remove access** option. Removing one link leaves their
     other riders untouched.
   - Correction requests from families appear on that page, and as a notice on Riders & tags.
-- **Parent, guardian or rider:** signs in with the invited email (there is no sign-up page yet: for testing, create the account in Supabase under Authentication → Users → Add user, with "Auto Confirm User" ticked), opens
+- **Parent, guardian or rider:** signs in, or creates an account at `/signup`, with the invited email (see `email-and-sign-up-setup.md`), opens
   **Riders and family** from the account menu, and accepts. They see:
   - the details the club holds (read-only), with a way to ask the club for a correction;
   - a choice of how the name appears on the scoreboard (until they choose, the club default

@@ -5,7 +5,7 @@ This milestone adds password sign-in, club creation, rider registration and tag 
 ## Configure a development project
 
 1. Create a separate development Supabase project. In its SQL editor, run `supabase/migrations/202611190001_club_registry.sql` once against a fresh database. The migration is transactional; do not rerun it over existing tables. Future changes should use new migrations.
-2. In Authentication settings, disable **Allow new users to sign up**. This pilot is administrator-provisioned. An authenticated account without memberships can create its first club, so do not enable public sign-up.
+2. Sign-up: until migration 010 is applied, keep **Allow new users to sign up** switched off (before 010 an account without a club could create one). From migration 010 a new account can only apply for a club, which a platform administrator must approve, so sign-up can be switched on. See [email and sign-up setup](email-and-sign-up-setup.md).
 3. In Authentication → Users, add a test admin with an email and password; confirm the test account through the dashboard. The app does not send invitations or accept rider self-registration yet. Password recovery is available after configuring the email template in [account shell setup](account-shell-setup.md). The project owner still provisions accounts in Supabase.
 4. Copy `.env.example` to `.env`. Set the project URL and **publishable key** from the project dashboard. A legacy `anon` JWT also works. Do not use a secret or `service_role` key. Never commit `.env` or paste credentials into a pull request.
 5. Run `npm ci`, then `npm run dev`. Open `/login`, sign in, create your test club, and register a fictional rider. Refresh to verify persistence.

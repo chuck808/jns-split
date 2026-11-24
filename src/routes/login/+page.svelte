@@ -27,7 +27,10 @@
         {#if form?.message}<p class="feedback error" role="alert">{form.message}</p>{/if}
         <Button type="submit" variant="primary" size="lg" full>Sign in</Button>
       </form>
-      <a href="/forgot-password">Forgotten your password?</a>
+      <div class="links">
+        <a href="/forgot-password">Forgotten your password?</a>
+        <a href="/signup">New here? Create an account</a>
+      </div>
     {:else}
       <p>
         This installation isn’t connected to a database yet. Add your Supabase settings and apply
@@ -37,7 +40,8 @@
     {/if}
   </Card>
   <p class="note">
-    Club staff and coaches get accounts from their club. Riders don’t need an account to train.
+    Invited by your club? Create an account with the email they used. Riders don’t need an account
+    to ride.
   </p>
   <a class="center" href="/bench">Open the bench simulator</a>
 </PublicPage>
@@ -57,6 +61,13 @@
     margin: 0;
     font-size: 0.875rem;
     color: var(--muted);
+  }
+  .links {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 0.875rem;
   }
   .note {
     margin: 0;

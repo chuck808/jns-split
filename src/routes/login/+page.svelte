@@ -1,18 +1,17 @@
 <script lang="ts">
+  import Button from '#lib/ui/Button.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import PublicPage from '#lib/ui/PublicPage.svelte';
   let { data, form } = $props();
 </script>
 
-<svelte:head><title>Club sign-in · JNS SPLIT</title></svelte:head>
-<main class="account-page">
-  <a class="brand" href="/">
-    <img src="/favicon.svg" alt="" /><span><small>JNS</small><strong>SPLIT</strong></span>
-  </a>
-  <section class="panel auth-panel">
-    <span class="eyebrow">CLUB WORKSPACE</span>
-    <h1>Welcome back.</h1>
+<svelte:head><title>Sign in · JNS SPLIT</title></svelte:head>
+
+<PublicPage width="narrow">
+  <h1>Sign in</h1>
+  <Card>
     {#if data.configured}
-      <p>Sign in with your club administrator account.</p>
-      <form method="POST">
+      <form method="POST" class="stack">
         <label>
           Email<input name="email" type="email" autocomplete="username" required maxlength="254" />
         </label>
@@ -25,21 +24,48 @@
             maxlength="1024"
           />
         </label>
-        <button class="solid">Sign in</button>
+        {#if form?.message}<p class="feedback error" role="alert">{form.message}</p>{/if}
+        <Button type="submit" variant="primary" size="lg" full>Sign in</Button>
       </form>
-      {#if form?.message}<p class="feedback error" role="alert">{form.message}</p>{/if}
-      <a class="text-link" href="/forgot-password">Forgotten your password?</a>
-      <p class="caption">
-        Accounts are provisioned for club staff. Riders do not need an account to train. Contact the
-        person managing your club’s system if you need access.
-      </p>
+      <a href="/forgot-password">Forgotten your password?</a>
     {:else}
       <p>
-        Club registration is ready to connect. Add your Supabase project settings and apply the
-        database migration using <code>docs/supabase-setup.md</code>.
+        This installation isn’t connected to a database yet. Add your Supabase settings and apply
+        the migrations — see <code>docs/supabase-setup.md</code>.
       </p>
-      <div class="notice">No backend is configured. The bench simulator is still available.</div>
+      <p class="note">The bench simulator still works without one.</p>
     {/if}
-    <a class="text-link" href="/bench">Open bench simulator</a>
-  </section>
-</main>
+  </Card>
+  <p class="note">
+    Club staff and coaches get accounts from their club. Riders don’t need an account to train.
+  </p>
+  <a class="center" href="/bench">Open the bench simulator</a>
+</PublicPage>
+
+<style>
+  h1 {
+    margin: 0;
+    text-align: center;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0;
+  }
+  .stack label {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .note {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  .center {
+    text-align: center;
+    font-size: 0.875rem;
+  }
+</style>

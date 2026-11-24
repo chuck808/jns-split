@@ -1,29 +1,72 @@
+<script lang="ts">
+  import Card from '#lib/ui/Card.svelte';
+  import PageHeader from '#lib/ui/PageHeader.svelte';
+  import PublicPage from '#lib/ui/PublicPage.svelte';
+</script>
+
 <svelte:head><title>Help · JNS SPLIT</title></svelte:head>
-<main class="public-page">
-  <h1>Getting started</h1>
-  <section class="panel">
-    <h2>Club registration</h2>
-    <ol>
-      <li>Sign in using the account provisioned for you.</li>
-      <li>Create your pilot club or open your existing club.</li>
-      <li>Register a fictional rider. A tag can be added later.</li>
-      <li>Issue a full tag UID, then refresh to check that it saved.</li>
+
+<PublicPage>
+  <PageHeader title="Getting started" />
+
+  <Card title="Setting up your club">
+    <ol class="steps">
+      <li>Sign in with the account you were given.</li>
+      <li>
+        <a href="/clubs/request">Apply to register your club</a>. Once it’s approved, you become its
+        administrator.
+      </li>
+      <li>
+        In <strong>Riders & tags</strong>, register a rider (use made-up names while testing), then
+        give them a tag with the base station.
+      </li>
+      <li>
+        In <strong>Coaches & access</strong>, invite your coaches. Once they accept, add them to
+        sessions.
+      </li>
+      <li>In <strong>Sessions</strong>, plan a coached session or open practice.</li>
     </ol>
-    <h2>Reader testing</h2>
+  </Card>
+
+  <Card title="Several roles on one account?">
     <p>
-      Use the bench simulator with the Core2 USB reader, or paste a scan line. Close Serial Monitor
-      before connecting through the browser. USB reading needs a supported desktop browser.
+      If you’re a club admin and a coach, the top of the sidebar always says which one you’re using.
+      Switch between them from the account menu — you never need a second login.
     </p>
+  </Card>
+
+  <Card title="Using the base station">
     <p>
-      A captured UID is not confirmation of a lane assignment. The pilot club register is not yet
-      connected to the live timing controller.
+      Plug the reader into the club laptop by USB and choose <strong>Connect base station</strong>
+      on Riders & tags. Close the Arduino or PlatformIO Serial Monitor first, and use Chrome or Edge on
+      a computer — USB reading doesn’t work on phones.
     </p>
-    <a class="text-link" href="/bench">Open bench simulator</a>
-    <h2>Having trouble signing in?</h2>
+    <p class="note">
+      Reading a tag at the desk doesn’t check a rider in at a lane. Lane check-in comes with the
+      timing equipment.
+    </p>
+    <a href="/bench">Open the bench simulator</a>
+  </Card>
+
+  <Card title="Can’t sign in?">
     <p>
-      Check that you saved your local settings and restarted the development server. Your account
-      must belong to the same Supabase project as the app.
+      Check you’re using the email your account was created with, or
+      <a href="/forgot-password">reset your password</a>. If you’re running your own copy, your
+      account must be in the same Supabase project as the app.
     </p>
-    <a class="text-link" href="/forgot-password">Request a password reset</a>
-  </section>
-</main>
+  </Card>
+</PublicPage>
+
+<style>
+  .steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .note {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+</style>

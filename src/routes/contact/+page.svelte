@@ -1,18 +1,29 @@
+<script lang="ts">
+  import Card from '#lib/ui/Card.svelte';
+  import PageHeader from '#lib/ui/PageHeader.svelte';
+  import PublicPage from '#lib/ui/PublicPage.svelte';
+</script>
+
 <svelte:head><title>Contact · JNS SPLIT</title></svelte:head>
-<main class="public-page">
-  <h1>Contact & access</h1>
-  <section class="panel">
-    <h2>Already testing with a club?</h2>
-    <p>Contact the person who gave you access to JNS SPLIT for account or equipment help.</p>
-    <h2>Joining the pilot</h2>
+
+<PublicPage>
+  <PageHeader title="Contact & access" />
+  <Card title="Already using JNS SPLIT with a club?">
+    <p>For help with your account or equipment, contact the person who set up your access.</p>
+  </Card>
+  <Card title="Joining the pilot">
     <p>
-      Access is currently arranged directly with participating clubs. Public registration and a
-      support mailbox have not opened yet.
+      Access is arranged directly with clubs taking part in the pilot. Public sign-up and a support
+      inbox aren’t open yet.
     </p>
-    <p>
-      No messages are collected on this page. A contact form will be enabled once the support
-      address and delivery service are configured.
-    </p>
-    <a class="text-link" href="/help">Read the getting-started guide</a>
-  </section>
-</main>
+    <p class="note">This page doesn’t collect messages.</p>
+    <a href="/help">Read the getting-started guide</a>
+  </Card>
+</PublicPage>
+
+<style>
+  .note {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+</style>

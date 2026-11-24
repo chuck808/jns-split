@@ -1,15 +1,17 @@
 <script lang="ts">
+  import Button from '#lib/ui/Button.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import PublicPage from '#lib/ui/PublicPage.svelte';
   let { form } = $props();
 </script>
 
 <svelte:head><title>Choose a password · JNS SPLIT</title></svelte:head>
-<main class="account-page">
-  <section class="panel auth-panel">
-    <h1>Choose a new password</h1>
-    <p>
-      Use at least 12 characters and follow any additional requirements set by your administrator.
-    </p>
-    <form method="POST">
+
+<PublicPage width="narrow">
+  <h1>New password</h1>
+  <Card>
+    <p class="note">At least 12 characters.</p>
+    <form method="POST" class="stack">
       <label>
         New password<input
           name="password"
@@ -19,8 +21,9 @@
           maxlength="1024"
           required
         />
-      </label><label>
-        Confirm new password<input
+      </label>
+      <label>
+        Type it again<input
           name="confirmation"
           type="password"
           autocomplete="new-password"
@@ -28,8 +31,31 @@
           maxlength="1024"
           required
         />
-      </label><button class="solid">Save password</button>
+      </label>
+      {#if form?.message}<p class="feedback error" role="alert">{form.message}</p>{/if}
+      <Button type="submit" variant="primary" size="lg" full>Save password</Button>
     </form>
-    {#if form?.message}<p class="feedback error" role="alert">{form.message}</p>{/if}
-  </section>
-</main>
+  </Card>
+</PublicPage>
+
+<style>
+  h1 {
+    margin: 0;
+    text-align: center;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0;
+  }
+  .stack label {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .note {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+</style>

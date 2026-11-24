@@ -207,7 +207,6 @@ p {
   padding: 2.5rem 3.5rem;
 }
 .app-shell header,
-.account-page header,
 .section-heading,
 .session-top,
 .card-top {
@@ -216,8 +215,7 @@ p {
   justify-content: space-between;
   gap: 1rem;
 }
-.app-shell header,
-.account-page header {
+.app-shell header {
   margin-bottom: 1.6rem;
 }
 .notice {
@@ -561,37 +559,11 @@ code {
   }
 }
 /* Persistent club workspace */
-.account-page {
-  max-width: 580px;
-  margin: 3rem auto;
-  padding: 1.5rem;
-}
-.account-page.wide {
-  max-width: 920px;
-}
-.auth-panel {
-  margin-top: 2rem;
-}
-.auth-panel label {
-  margin: 1rem 0;
-}
-.auth-panel .solid {
-  width: 100%;
-  margin: 1rem 0;
-}
 .text-link {
   color: var(--accent-text);
   text-decoration: underline;
   display: inline-block;
   margin: 1rem 0;
-}
-.club-link {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-}
-.club-link:hover {
-  border-color: var(--accent);
 }
 .nav-link {
   padding: 0.65rem 1rem;
@@ -640,9 +612,6 @@ h3 {
   .nav-link {
     white-space: nowrap;
     font-size: 0.85rem;
-  }
-  .account-page {
-    margin: 1rem auto;
   }
 }
 
@@ -752,46 +721,6 @@ h3 {
   }
 }
 
-.theme-picker {
-  display: flex;
-  gap: 0.5rem;
-  align-items: end;
-}
-.theme-picker label {
-  min-width: 90px;
-  font-size: 0.75rem;
-}
-.theme-picker select {
-  margin: 0;
-  padding: 0.35rem;
-}
-.theme-picker button {
-  padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
-}
-.public-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-.hero {
-  max-width: 780px;
-  padding: 3rem 0;
-}
-.hero h1 {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  line-height: 1.05;
-}
-.hero p {
-  font-size: 1.15rem;
-  line-height: 1.7;
-}
-.public-actions {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 2rem;
-}
 .link-button {
   display: inline-block;
   padding: 0.8rem 1.1rem;
@@ -799,19 +728,6 @@ h3 {
   border-radius: 9px;
   color: inherit;
   text-decoration: none;
-}
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-.public-page p,
-.public-page li {
-  line-height: 1.75;
-}
-.public-page ol {
-  list-style: decimal;
-  padding-left: 1.5rem;
 }
 .skip-link {
   position: absolute;
@@ -824,11 +740,6 @@ h3 {
 }
 .skip-link:focus {
   top: 0;
-}
-@media (max-width: 720px) {
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   *,

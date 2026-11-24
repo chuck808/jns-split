@@ -1,20 +1,38 @@
 <script lang="ts">
+  import Button from '#lib/ui/Button.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import PublicPage from '#lib/ui/PublicPage.svelte';
   let { data, form } = $props();
 </script>
 
 <svelte:head>
   <title>Confirm password reset · JNS SPLIT</title><meta name="referrer" content="same-origin" />
 </svelte:head>
-<main class="account-page">
-  <section class="panel auth-panel">
-    <h1>Reset your password</h1>
-    {#if data.ready && !form?.message}<p>
-        Continue to verify your email link and choose a new password.
+
+<PublicPage width="narrow">
+  <h1>Reset your password</h1>
+  <Card>
+    {#if data.ready && !form?.message}
+      <p>Continue to check your email link and choose a new password.</p>
+      <form method="POST">
+        <Button type="submit" variant="primary" size="lg" full>Continue</Button>
+      </form>
+    {:else}
+      <p role="alert">
+        {form?.message ?? 'This link is missing or has expired. Ask for a new reset email.'}
       </p>
-      <form method="POST"><button class="solid">Continue to reset password</button></form>{:else}<p
-        role="alert"
-      >
-        {form?.message ?? 'This link is missing or has expired. Request a new reset email.'}
-      </p>{/if}<a class="text-link" href="/forgot-password">Request another link</a>
-  </section>
-</main>
+    {/if}
+  </Card>
+  <a class="center" href="/forgot-password">Send another link</a>
+</PublicPage>
+
+<style>
+  h1 {
+    margin: 0;
+    text-align: center;
+  }
+  .center {
+    text-align: center;
+    font-size: 0.875rem;
+  }
+</style>

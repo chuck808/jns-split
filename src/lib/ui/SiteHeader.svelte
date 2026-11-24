@@ -19,7 +19,10 @@
     {/each}
   </nav>
   <div class="theme"><ThemeSelector value={theme} /></div>
-  <a class="open" href="/app">Open JNS SPLIT</a>
+  <div class="cta">
+    <a class="signin" href="/app">Sign in</a>
+    <a class="open" href="/clubs/request">Register your club</a>
+  </div>
 </header>
 
 <style>
@@ -52,6 +55,24 @@
     color: var(--text);
     background: var(--raised);
   }
+  .cta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .signin {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    padding: 0 0.75rem;
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .signin:hover {
+    text-decoration: underline;
+  }
   .open {
     white-space: nowrap;
     display: inline-flex;
@@ -73,7 +94,7 @@
       gap: 0.5rem 1rem;
       padding: 0.75rem 1rem;
     }
-    .open {
+    .cta {
       margin-left: auto;
     }
     nav {

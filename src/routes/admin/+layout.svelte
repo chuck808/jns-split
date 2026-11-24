@@ -7,6 +7,7 @@
   shell={data.shell}
   theme={data.theme}
   area="Platform administration"
+  context="Platform administration"
   homeHref="/admin"
   nav={[{ href: '/admin', label: 'Club applications', prefix: true }]}
 >

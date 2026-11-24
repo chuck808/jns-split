@@ -7,6 +7,7 @@
   shell={data.shell}
   theme={data.theme}
   area="Coach"
+  context="Coach"
   homeHref="/coach"
   nav={[
     { href: '/coach', label: 'Home' },

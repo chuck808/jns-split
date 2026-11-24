@@ -1,15 +1,16 @@
 <script lang="ts">
   import SessionList from '#lib/components/SessionList.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import PageHeader from '#lib/ui/PageHeader.svelte';
   let { data } = $props();
 </script>
 
 <svelte:head><title>My sessions · JNS SPLIT</title></svelte:head>
-<div class="page-stack">
-  <h1>My assigned sessions</h1>
-  <p>
-    Only sessions explicitly assigned to you appear here. A club link alone does not grant session
-    access.
-  </p>
-  <a class="text-link" href="/coach">Back to coach workspace</a>
-  <section class="panel"><SessionList list={data.list} status={data.filters.status} /></section>
-</div>
+<PageHeader
+  eyebrow="Coach"
+  title="My sessions"
+  description="Sessions a club has assigned to you. Being linked to a club doesn’t show you all of its sessions."
+/>
+<Card>
+  <SessionList list={data.list} status={data.filters.status} showClub />
+</Card>

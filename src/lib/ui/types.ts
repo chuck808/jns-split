@@ -4,3 +4,9 @@ export interface NavItem {
   /** Also mark as current on child paths, e.g. /club/x/riders/123 for Riders. */
   prefix?: boolean;
 }
+
+export interface Choice {
+  value: string;
+  label: string;
+  description?: string;
+}

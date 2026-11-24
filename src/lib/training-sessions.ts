@@ -1,8 +1,9 @@
 export type SessionActivity = 'coached' | 'free_ride';
 export const activityLabel = (activity: SessionActivity) =>
-  activity === 'free_ride' ? 'Free ride · open club practice' : 'Coached session';
+  activity === 'free_ride' ? 'Open practice' : 'Coached session';
 export function sessionActivity(value: FormDataEntryValue | null): SessionActivity {
-  if (value !== 'coached' && value !== 'free_ride') throw new Error('Choose coached or free ride.');
+  if (value !== 'coached' && value !== 'free_ride')
+    throw new Error('Choose coached session or open practice.');
   return value;
 }
 export interface TrainingSession {

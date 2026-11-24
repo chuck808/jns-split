@@ -1,6 +1,10 @@
 <script lang="ts">
   import type { TrainingSession } from '#lib/training-sessions';
   import type { ParticipantPage, CandidatePage } from '#lib/session-participants';
+  import Button from '#lib/ui/Button.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import EmptyState from '#lib/ui/EmptyState.svelte';
+  import StatusChip from '#lib/ui/StatusChip.svelte';
   let {
     session,
     isAdmin,
@@ -23,112 +27,158 @@
     }).toString();
 </script>
 
-<section class="panel">
-  <h2>Session participants ({participants.total})</h2>
-  <p>
-    These riders are included in this session plan. Inclusion does not mark attendance, assign a
-    lane or record an attempt. Each run will still require a lane scan when the controller
-    integration is available.
+<Card title={`Riders on the list (${participants.total})`}>
+  <p class="note">
+    Being on the list doesn’t mark attendance or assign a lane. Riders still scan at their lane for
+    every effort.
   </p>
-  {#if !isAdmin}<p class="caption">
-      Your assignment allows you to view these participants only. Club administrators manage this
-      list; rider tags and wider history are not shared.
+  {#if !isAdmin}<p class="note">
+      You can see this list but not change it. Tags and wider rider history aren’t shared with
+      coaches.
     </p>{/if}
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Rider</th><th>
-            Registration status
-          </th>{#if isAdmin && session.status === 'planned'}<th>Action</th>{/if}
-        </tr>
-      </thead><tbody>
-        {#each participants.items as rider}<tr>
-            <td>{rider.display_name}</td><td>
-              {rider.archived ? 'Archived — retained in session history' : 'Active'}
-            </td>{#if isAdmin && session.status === 'planned'}<td>
-                <form method="POST" action={`?/removeParticipant&${params()}`}>
-                  <input type="hidden" name="version" value={session.version} /><input
-                    type="hidden"
-                    name="riderId"
-                    value={rider.id}
-                  /><button aria-label={`Remove ${rider.display_name} from this session`}>
-                    Remove
-                  </button>
-                </form>
-              </td>{/if}
-          </tr>{/each}
-      </tbody>
-    </table>
-  </div>
-  {#if !participants.total}<p>No participants have been added yet.</p>{/if}
-  <nav class="pagination" aria-label="Participant pages">
-    {#if participants.page > 1}<a
-        href={`?${params({ participantsPage: String(participants.page - 1) })}`}
-      >
-        Previous participants
-      </a>{/if}<span>
-      Page {participants.page} of {participants.pages}
-    </span>{#if participants.page < participants.pages}<a
-        href={`?${params({ participantsPage: String(participants.page + 1) })}`}
-      >
-        Next participants
-      </a>{/if}
-  </nav>
-  {#if session.status !== 'planned'}<p>
-      This session is {session.status}; its participant list is read-only. Registration status
-      reflects the rider’s current club record.
-    </p>{/if}
-  {#if isAdmin && session.status === 'planned' && candidates}<h3>Add riders from this club</h3>
-    <p>
-      Only active club riders who are not already in this session are listed. A tag is not required
-      for planning.
-    </p>
-    <form method="GET" class="form-row">
-      <input type="hidden" name="participantsPage" value={participants.page} /><label>
-        Search rider name<input name="riderQuery" maxlength="60" value={query} />
-      </label><button>Search riders</button><a
-        class="text-link"
-        href={`?${params({ riderQuery: '', candidatesPage: '1' })}`}
-      >
-        Clear search
-      </a>
-    </form>
-    <p>{candidates.total} eligible riders match this search.</p>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Rider</th><th>Add to session</th></tr></thead><tbody>
-          {#each candidates.items as rider}<tr>
-              <td>{rider.display_name}</td><td>
-                <form method="POST" action={`?/addParticipant&${params()}`}>
-                  <input type="hidden" name="version" value={session.version} /><input
-                    type="hidden"
-                    name="riderId"
-                    value={rider.id}
-                  /><button aria-label={`Add ${rider.display_name} to this session`}>
-                    Add rider
-                  </button>
-                </form>
-              </td>
-            </tr>{/each}
-        </tbody>
-      </table>
-    </div>
-    {#if !candidates.total}<p>
-        No eligible riders match. Clear the search, or register a rider in the club register.
-      </p>{/if}
-    <nav class="pagination" aria-label="Eligible rider pages">
-      {#if candidates.page > 1}<a
-          href={`?${params({ candidatesPage: String(candidates.page - 1) })}`}
+  {#if participants.items.length}
+    <ul class="riders">
+      {#each participants.items as rider (rider.id)}
+        <li>
+          <span class="name">{rider.display_name}</span>
+          {#if rider.archived}<StatusChip>Archived · kept in this session</StatusChip>{/if}
+          {#if isAdmin && session.status === 'planned'}
+            <form method="POST" action={`?/removeParticipant&${params()}`}>
+              <input type="hidden" name="version" value={session.version} />
+              <input type="hidden" name="riderId" value={rider.id} />
+              <Button
+                type="submit"
+                variant="quiet"
+                aria-label={`Remove ${rider.display_name} from this session`}
+              >
+                Remove
+              </Button>
+            </form>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  {:else}
+    <EmptyState title="No riders on the list yet" />
+  {/if}
+  {#if participants.pages > 1}
+    <nav class="pagination" aria-label="Participant pages">
+      {#if participants.page > 1}<Button
+          href={`?${params({ participantsPage: String(participants.page - 1) })}`}
         >
-          Previous riders
-        </a>{/if}<span>
-        Page {candidates.page} of {candidates.pages}
-      </span>{#if candidates.page < candidates.pages}<a
-          href={`?${params({ candidatesPage: String(candidates.page + 1) })}`}
+          Previous
+        </Button>{/if}
+      <span>Page {participants.page} of {participants.pages}</span>
+      {#if participants.page < participants.pages}<Button
+          href={`?${params({ participantsPage: String(participants.page + 1) })}`}
         >
-          Next riders
-        </a>{/if}
+          Next
+        </Button>{/if}
     </nav>
-    <a class="text-link" href={`/club/${session.club_id}/riders`}>Open club register</a>{/if}
-</section>
+  {/if}
+  {#if session.status !== 'planned'}<p class="note">
+      This session is {session.status}, so the list is read-only.
+    </p>{/if}
+
+  {#if isAdmin && session.status === 'planned' && candidates}
+    <h3>Add riders</h3>
+    <p class="note">Active club riders not already on the list. A tag isn’t needed to plan.</p>
+    <form method="GET" class="search">
+      <input type="hidden" name="participantsPage" value={participants.page} />
+      <label>Search by name<input name="riderQuery" maxlength="60" value={query} /></label>
+      <Button type="submit">Search</Button>
+      <a href={`?${params({ riderQuery: '', candidatesPage: '1' })}`}>Clear</a>
+    </form>
+    {#if candidates.items.length}
+      <ul class="riders">
+        {#each candidates.items as rider (rider.id)}
+          <li>
+            <span class="name">{rider.display_name}</span>
+            <form method="POST" action={`?/addParticipant&${params()}`}>
+              <input type="hidden" name="version" value={session.version} />
+              <input type="hidden" name="riderId" value={rider.id} />
+              <Button type="submit" aria-label={`Add ${rider.display_name} to this session`}>
+                Add
+              </Button>
+            </form>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <EmptyState title="No riders match">
+        Clear the search, or register the rider in Riders & tags first.
+      </EmptyState>
+    {/if}
+    {#if candidates.pages > 1}
+      <nav class="pagination" aria-label="Eligible rider pages">
+        {#if candidates.page > 1}<Button
+            href={`?${params({ candidatesPage: String(candidates.page - 1) })}`}
+          >
+            Previous
+          </Button>{/if}
+        <span>Page {candidates.page} of {candidates.pages}</span>
+        {#if candidates.page < candidates.pages}<Button
+            href={`?${params({ candidatesPage: String(candidates.page + 1) })}`}
+          >
+            Next
+          </Button>{/if}
+      </nav>
+    {/if}
+  {/if}
+</Card>
+
+<style>
+  .note {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .riders {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.5rem;
+  }
+  .riders li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.3rem 0.4rem 0.3rem 0.9rem;
+    min-height: 52px;
+    border-radius: var(--radius);
+    background: var(--raised);
+  }
+  .riders form {
+    margin: 0 0 0 auto;
+  }
+  .name {
+    font-weight: 600;
+  }
+  h3 {
+    margin: 0.75rem 0 0;
+    font-size: 1rem;
+  }
+  .search {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .search label {
+    flex: 1 1 240px;
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .search a {
+    align-self: center;
+  }
+  .pagination {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+</style>

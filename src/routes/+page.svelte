@@ -56,7 +56,7 @@
     },
     {
       title: 'Riders and families',
-      text: 'See your own times and progress over the season. Families will see only their own child.'
+      text: 'See your own times and progress over the season. Families see only their own child.'
     }
   ];
 
@@ -71,7 +71,7 @@
     },
     {
       title: 'Families see only their child',
-      text: 'Family access is being built so a parent or guardian can follow their own rider, never anyone else’s.'
+      text: 'A parent or guardian the club invites sees their own child, never anyone else’s.'
     },
     {
       title: 'Coaches see their sessions',

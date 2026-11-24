@@ -27,6 +27,7 @@
 
 <PageHeader eyebrow={data.detail.clubName} title={session.name}>
   {#snippet actions()}
+    <Button href={`/sessions/${session.id}/trackside`} variant="primary">Trackside view</Button>
     <Button href={data.detail.isAdmin ? `/club/${session.club_id}/sessions` : '/coach/sessions'}>
       Back to sessions
     </Button>

@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { requireAdmin } from '#lib/server/access';
 import { coachError, emailAddress, uuid, type ClubCoaches } from '#lib/coaches';
 import { rosterFilters } from '#lib/club-workspace';
+import { invitationNotice, sendInvitation, type SendOutcome } from '#lib/server/mail';
 export const load: PageServerLoad = async (event) => {
   const { client } = await requireAdmin(event, event.params.clubId);
   const page = rosterFilters(event.url.searchParams).page;
@@ -16,7 +17,7 @@ export const load: PageServerLoad = async (event) => {
   });
   if (problem)
     error(503, 'Unable to load coaches. Apply the coach invitations migration and try again.');
-  return { directory: data as ClubCoaches };
+  return { directory: data as ClubCoaches, emailOn: !!event.locals.mailer };
 };
 export const actions: Actions = {
   invite: async (event) => {
@@ -28,11 +29,21 @@ export const actions: Actions = {
       p_email: email
     });
     if (error) return fail(400, { message: coachError(error.code), ok: false });
-    return {
-      message:
-        'Invitation created. No email has been sent. Ask the coach to sign in (or create an account at /signup) with that address and open Coach within seven days.',
-      ok: true
-    };
+    let outcome: SendOutcome = 'off';
+    if (event.locals.mailer) {
+      const { data: club } = await client
+        .from('clubs')
+        .select('name')
+        .eq('id', event.params.clubId)
+        .single();
+      outcome = await sendInvitation(
+        event.locals.mailer,
+        'coach',
+        club?.name ?? 'Your club',
+        email
+      );
+    }
+    return { message: invitationNotice(outcome, email, 'Coach'), ok: true };
   },
   revoke: async (event) => {
     const { client } = await requireAdmin(event, event.params.clubId);

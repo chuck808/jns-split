@@ -71,8 +71,8 @@
         In Riders & tags, choose <strong>Manage</strong> on a rider, then
         <strong>Family access</strong>. Your club’s age bands (in Settings) decide whether you
         invite a parent or guardian, the rider, or choose. Check who they are with your club’s usual
-        process, then create the invitation. No email is sent yet: ask them to sign in with that
-        address within seven days.
+        process, then create the invitation. If your installation has email set up, they get an
+        email; otherwise ask them to sign in with that address within seven days.
       </p>
     </div>
     <div class="block">

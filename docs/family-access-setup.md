@@ -13,7 +13,7 @@ unchanged. Riders never need an account to ride.
     With only a year of birth, the rider is treated as the younger possible age.
   - The admin ticks that the club's own check is done, then creates the invitation.
   - Invitations work once, for one email and one rider, and last seven days. They can be renewed
-    or withdrawn. **No email is sent yet**: tell the person to sign in with that address.
+    or withdrawn. If invitation emails are set up (see `email-and-sign-up-setup.md`, step 5), they get an email, and renewing sends it again. Otherwise tell the person to sign in with that address.
   - Linked people are listed with a **Remove access** option. Removing one link leaves their
     other riders untouched.
   - Correction requests from families appear on that page, and as a notice on Riders & tags.

@@ -60,6 +60,38 @@ To add one:
 
 Never put SMTP passwords in the repository or in `.env` for this app; they live only in Supabase.
 
+## 5. Invitation emails (optional)
+
+Once you have an email sender, the app can also email coach and family invitations itself. It
+uses the same SMTP details as Supabase. Without these settings nothing changes: the app says no
+email was sent and you pass invitations on yourself.
+
+1. Open your `.env` file (never commit it) and add, with your own values:
+
+   ```
+   APP_URL=http://192.168.1.232:5173
+   SMTP_HOST=smtp.your-email-service.example
+   SMTP_PORT=587
+   SMTP_USER=your-smtp-username
+   SMTP_PASSWORD=your-smtp-password-or-api-key
+   EMAIL_FROM=JNS SPLIT <no-reply@your-domain.example>
+   ```
+
+   `APP_URL` is the address people open the app on, used for the links in the email. Port 587
+   uses STARTTLS and port 465 uses TLS; the app refuses to send unencrypted.
+
+2. Restart the app (`npm run dev`). If a setting is missing or invalid, the terminal says
+   "invitation emails are off".
+3. Invite a coach or family member to an address you can read. The page says "Invitation emailed
+   to …" and the email arrives with sign-in and sign-up links.
+
+What the email contains: the club's name and what the invitation is for. It never names the rider,
+so a mistyped address tells a stranger nothing about a child. If sending fails, the invitation is
+still created and the page says the email couldn't be sent. The app never logs addresses or email
+contents.
+
+On a hosting service such as Vercel, add the same six settings to its environment variables.
+
 ## Testing before a sender is set up
 
 - **Easiest:** create test accounts by hand under **Authentication** → **Users** → **Add user** →

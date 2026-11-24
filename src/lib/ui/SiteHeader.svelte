@@ -18,10 +18,8 @@
       <a {href} aria-current={page.url.pathname === href ? 'page' : undefined}>{label}</a>
     {/each}
   </nav>
-  <div class="end">
-    <ThemeSelector value={theme} />
-    <a class="open" href="/app">Open JNS SPLIT</a>
-  </div>
+  <div class="theme"><ThemeSelector value={theme} /></div>
+  <a class="open" href="/app">Open JNS SPLIT</a>
 </header>
 
 <style>
@@ -54,12 +52,8 @@
     color: var(--text);
     background: var(--raised);
   }
-  .end {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
   .open {
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     min-height: var(--touch);
@@ -75,12 +69,22 @@
     color: var(--on-accent);
   }
   @media (max-width: 720px) {
+    .site-header {
+      gap: 0.5rem 1rem;
+      padding: 0.75rem 1rem;
+    }
+    .open {
+      margin-left: auto;
+    }
     nav {
       order: 3;
-      flex-basis: 100%;
+      flex: 1;
     }
-    .end {
-      margin-left: auto;
+    nav a {
+      padding: 0 0.5rem;
+    }
+    .theme {
+      order: 4;
     }
   }
 </style>

@@ -4,15 +4,10 @@
 
 <svelte:head><title>Your clubs · JNS SPLIT</title></svelte:head>
 <main class="account-page wide">
-  <header>
-    <a class="brand" href="/">
-      <img src="/favicon.svg" alt="" /><span><small>JNS</small><strong>SPLIT</strong></span>
-    </a>
-    <form method="POST" action="/logout"><button>Sign out</button></form>
-  </header>
   <span class="eyebrow">CLUB ADMINISTRATION</span>
   <h1>Your club workspace</h1>
   <p>Signed in as {data.email}</p>
+  <form method="POST" action="/logout"><button>Sign out</button></form>
   {#if data.message}<div class="feedback error" role="alert">{data.message}</div>{/if}
   {#if data.coachInvitations || data.coachLinks}<section class="panel">
       <h2>Your coach workspace</h2>

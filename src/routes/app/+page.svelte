@@ -1,43 +1,65 @@
 <script lang="ts">
+  import Button from '#lib/ui/Button.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import CardGrid from '#lib/ui/CardGrid.svelte';
+  import PageHeader from '#lib/ui/PageHeader.svelte';
   let { data, form } = $props();
 </script>
 
-<svelte:head><title>Your workspaces · JNS SPLIT</title></svelte:head>
-<main class="account-page wide">
-  <span class="eyebrow">JNS SPLIT</span>
-  <h1>Where would you like to work?</h1>
-  <p>
-    Signed in as {data.email}. Choose a workspace below. You can switch at any time without signing
-    out.
-  </p>
+<svelte:head><title>Choose a workspace · JNS SPLIT</title></svelte:head>
+<div class="chooser">
+  <PageHeader eyebrow={`Signed in as ${data.email}`} title="Where to?" />
   {#if form?.message}<p class="feedback error" role="alert">{form.message}</p>{/if}
-  <div class="feature-grid workspace-cards">
-    {#each data.items as workspace}<section class="panel">
-        <h2>{workspace.label}</h2>
-        <p>{workspace.description}</p>
-        <form method="POST">
-          <input type="hidden" name="workspace" value={workspace.key} /><button class="solid">
-            Open {workspace.label}
-          </button>
-        </form>
-      </section>{/each}
-  </div>
-  {#if !data.items.length}<section class="panel">
-      <h2>No workspaces linked yet</h2>
+
+  {#if data.items.length}
+    <CardGrid columns={data.items.length > 2 ? 3 : 2}>
+      {#each data.items as workspace (workspace.key)}
+        <Card title={workspace.label}>
+          <p>{workspace.description}</p>
+          <form method="POST">
+            <input type="hidden" name="workspace" value={workspace.key} />
+            <Button type="submit" variant="primary">Open</Button>
+          </form>
+        </Card>
+      {/each}
+    </CardGrid>
+    <p class="caption">
+      Only workspaces you’ve been given access to are shown. Switching changes the view, not your
+      access — you can also switch from the account menu at any time.
+    </p>
+  {:else}
+    <Card title="Nothing linked to this account yet">
       <p>
-        Ask your club administrator for an invitation using your confirmed account email. You cannot
-        choose a role to grant yourself access.
+        Ask your club administrator to invite the email address you sign in with. You can’t give
+        yourself a role.
       </p>
-      <a class="text-link" href="/coach">Check coach invitations</a>
-      <p>
-        Representing a club? <a href="/clubs/request">Apply to register your club</a>. Your
-        application needs platform approval before you can manage it.
-      </p>
-    </section>{/if}
-  <p class="caption">
-    Your choice is remembered on this browser for this account and checked against current
-    permissions each time you return. Switching workspace changes the view, not your access rights.
-  </p>
-  <a class="text-link" href="/clubs/request">Your club applications</a>
-  <a class="text-link" href="/account">Account settings</a>
-</main>
+      <div class="links">
+        <Button href="/coach">Check coach invitations</Button>
+        <Button href="/clubs/request">Register a club</Button>
+      </div>
+      <p class="caption">A new club needs platform approval before you can manage it.</p>
+    </Card>
+  {/if}
+
+  <nav class="links" aria-label="Account">
+    <a href="/clubs/request">Your club applications</a>
+    <a href="/account">Account settings</a>
+  </nav>
+</div>
+
+<style>
+  .chooser {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .links {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+</style>

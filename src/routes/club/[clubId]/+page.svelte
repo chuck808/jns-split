@@ -1,58 +1,96 @@
 <script lang="ts">
+  import Button from '#lib/ui/Button.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import CardGrid from '#lib/ui/CardGrid.svelte';
+  import EmptyState from '#lib/ui/EmptyState.svelte';
+  import PageHeader from '#lib/ui/PageHeader.svelte';
+  import Stat from '#lib/ui/Stat.svelte';
+  import StatusChip from '#lib/ui/StatusChip.svelte';
   let { data, form } = $props();
+  const base = $derived(`/club/${data.club.id}`);
+  const today = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  }).format(new Date());
   const date = (v: string) => new Date(v).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 </script>
 
-<svelte:head><title>{data.club.name} · Club overview · JNS SPLIT</title></svelte:head>
-<h1>Club overview</h1>
-<p>Your register, at a glance.</p>
+<svelte:head><title>{data.club.name} · Club home · JNS SPLIT</title></svelte:head>
+
+<PageHeader eyebrow={today} title={data.club.name}>
+  {#snippet actions()}
+    <Button href={`${base}/riders`}>Register a rider</Button>
+    <Button variant="primary" href={`${base}/sessions`}>Plan a session</Button>
+  {/snippet}
+</PageHeader>
+
 {#if form?.message}<p class="feedback" class:error={!form.ok} role="status">
-    {form.message} <a href={`/club/${data.club.id}/riders`}>Open rider management</a>
+    {form.message} <a href={`${base}/riders`}>Open rider management</a>
   </p>{/if}
-<div class="metrics">
-  <div><span>Active riders</span><strong>{data.overview.active}</strong></div>
-  <div><span>Active tags</span><strong>{data.overview.tagged}</strong></div>
-  <div><span>Awaiting a tag</span><strong>{data.overview.untagged}</strong></div>
-</div>
-<div class="public-actions">
-  <a class="solid link-button" href={`/club/${data.club.id}/riders`}>Register / manage riders</a><a
-    class="link-button"
-    href={`/club/${data.club.id}/riders?status=untagged`}
-  >
-    Riders awaiting tags
-  </a>
-</div>
-<div class="feature-grid workspace-cards">
-  <section class="panel">
-    <h2>Club register</h2>
-    <p>{data.overview.archived} archived riders. Archiving retains identity and tag history.</p>
-    <a class="text-link" href={`/club/${data.club.id}/riders?status=archived`}>
-      View archived riders
-    </a>
-  </section>
-  <section class="panel">
-    <h2>Session planning</h2>
+
+<CardGrid columns={3}>
+  <Card title="Riders">
+    <Stat label="Active riders" value={data.overview.active} />
+    <a href={`${base}/riders`}>Manage riders</a>
+  </Card>
+  <Card title="Tags" tone={data.overview.untagged > 0 ? 'highlight' : 'default'}>
+    <Stat
+      label="Riders waiting for a tag"
+      value={data.overview.untagged}
+      hint={`${data.overview.tagged} riders have an active tag`}
+    />
+    <a href={`${base}/riders?status=untagged`}>Issue tags</a>
+  </Card>
+  <Card title="Equipment">
+    <div><StatusChip>Not connected</StatusChip></div>
     <p>
-      Create a session plan and assign approved coaches. Hardware recording and timing uploads are
-      not connected yet.
+      No timing controller has reported in yet. Bench and test devices are under Test equipment.
     </p>
-    <a class="text-link" href={`/club/${data.club.id}/sessions`}>Plan a session</a>
-  </section>
-  <section class="panel">
-    <h2>Club defaults</h2>
-    <p>
-      Preferred speed unit: {data.club.speed_unit}. This is saved for future recorded-session
-      displays; the simulator keeps its own settings.
+    <a href={`${base}/equipment`}>Test equipment</a>
+  </Card>
+</CardGrid>
+
+<CardGrid columns={2}>
+  <Card title="Sessions">
+    <p>Plan coached sessions or open practice, choose riders and give coaches access.</p>
+    <p class="note">Timing and result uploads are not connected yet.</p>
+    <div><Button href={`${base}/sessions`}>Open sessions</Button></div>
+  </Card>
+  <Card title="Club settings">
+    <p>Preferred speed unit: <strong>{data.club.speed_unit}</strong>.</p>
+    <p class="note">
+      {data.overview.archived} archived riders keep their identity and tag history.
     </p>
-    <a class="text-link" href={`/club/${data.club.id}/settings`}>Edit club settings</a>
-  </section>
-</div>
-<section class="panel">
-  <h2>Recent changes</h2>
-  <p>Latest 10 saved club actions.</p>
-  {#each data.overview.audit as entry}<p class="event">
+    <div class="links">
+      <a href={`${base}/settings`}>Edit settings</a>
+      <a href={`${base}/riders?status=archived`}>Archived riders</a>
+    </div>
+  </Card>
+</CardGrid>
+
+<Card title="Recent changes">
+  {#each data.overview.audit as entry}
+    <p class="event">
       {entry.action.replaceAll('_', ' ')} · {entry.display_name ?? 'Club'}<small class="block">
         {date(entry.created_at)}
       </small>
-    </p>{:else}<p>No changes recorded yet.</p>{/each}
-</section>
+    </p>
+  {:else}
+    <EmptyState title="No changes recorded yet">
+      Registering riders, issuing tags and inviting coaches will appear here.
+    </EmptyState>
+  {/each}
+</Card>
+
+<style>
+  .note {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .links {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+</style>

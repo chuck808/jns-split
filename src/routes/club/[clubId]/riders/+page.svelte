@@ -1,31 +1,39 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import { connectReader } from '#lib/serial';
   import { parseScan } from '#lib/session';
+  import Button from '#lib/ui/Button.svelte';
+  import Card from '#lib/ui/Card.svelte';
+  import EmptyState from '#lib/ui/EmptyState.svelte';
+  import PageHeader from '#lib/ui/PageHeader.svelte';
+  import StatusChip from '#lib/ui/StatusChip.svelte';
+  import { tagSuffix } from '#lib/ui/format';
+
   let { data, form } = $props();
   let selectedId = $state('');
   let editUid = $state(''),
     newUid = $state(''),
     lastUid = $state(''),
     pasted = $state('');
-  let readerStatus = $state('Reader disconnected.'),
+  let readerStatus = $state('Connect the base station to read tags instead of typing them.'),
     connected = $state(false),
     connecting = $state(false);
   let stop: (() => Promise<void>) | undefined;
+  let manageHeading: HTMLHeadingElement | undefined = $state();
   let selected = $derived(data.riders.find((r) => r.id === selectedId));
 
   let activeTags = $derived(data.tags.filter((t) => !t.revoked_at));
   const activeTag = (id: string) => activeTags.find((t) => t.rider_id === id);
-
   const time = (value: string) =>
     new Date(value).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+
   async function connect() {
     connecting = true;
     try {
       stop = await connectReader(
         (scan) => {
           lastUid = scan.uid;
-          readerStatus = 'Tag captured. Choose where to use it below.';
+          readerStatus = 'Tag read. Choose where to use it.';
         },
         (message) => {
           readerStatus = message;
@@ -33,6 +41,7 @@
         }
       );
       connected = true;
+      readerStatus = 'Ready. Tap a tag on the base station.';
     } catch (e) {
       readerStatus = (e as Error).message;
     } finally {
@@ -43,14 +52,21 @@
     await stop?.();
     stop = undefined;
     connected = false;
+    readerStatus = 'Base station disconnected.';
   }
   function parse() {
     try {
       lastUid = parseScan(pasted).uid;
-      readerStatus = 'Tag captured. Choose where to use it below.';
+      readerStatus = 'Tag read. Choose where to use it.';
     } catch {
       readerStatus = 'Paste a valid JSON scan line from the Core2 bench firmware.';
     }
+  }
+  async function manage(id: string) {
+    selectedId = id;
+    editUid = '';
+    await tick();
+    manageHeading?.focus();
   }
   const pageLink = (n: number) =>
     '?' +
@@ -60,169 +76,418 @@
   });
 </script>
 
-<svelte:head><title>{data.club.name} · JNS SPLIT</title></svelte:head>
-<h1>Riders & tags</h1>
-<div class="notice">
-  <strong>Saved club records</strong><span>
-    Changes are saved to Supabase. This register is not yet connected to the timing controller or
-    bench simulator.
-  </span>
-</div>
-{#if form?.message}<div class="feedback" class:error={!form.ok} role="status">
-    {form.message}
-  </div>{/if}
-<section class="panel">
-  <h2>Register a rider</h2>
-  <p>
-    Use the club’s existing registration and permissions process. Only a display name is needed
-    here; do not enter safeguarding documents.
-  </p>
-  <form method="POST" action="?/register">
-    <div class="form-row">
+<svelte:head><title>Riders & tags · {data.club.name} · JNS SPLIT</title></svelte:head>
+
+<PageHeader
+  eyebrow={data.club.name}
+  title="Riders & tags"
+  description="Each rider belongs to the club. Results stay with the rider, so replacing a lost tag never loses their history."
+/>
+
+{#if form?.message}<p class="feedback" class:error={!form.ok} role="status">{form.message}</p>{/if}
+
+<div class="top">
+  <Card title="Base station" tone={lastUid ? 'highlight' : 'default'}>
+    {#snippet actions()}
+      {#if connected}<StatusChip tone="success">Connected · USB</StatusChip>
+      {:else}<StatusChip>Not connected</StatusChip>{/if}
+    {/snippet}
+    <p class="status" role="status">{readerStatus}</p>
+    {#if lastUid}
+      <div class="captured">
+        <span class="label">Tag read</span>
+        <span class="suffix tabular">{tagSuffix(lastUid)}</span>
+        <code>{lastUid}</code>
+      </div>
+      <div class="row">
+        <Button onclick={() => (newUid = lastUid)}>Use for a new rider</Button>
+        <Button disabled={!selected || !!selected.archived_at} onclick={() => (editUid = lastUid)}>
+          {selected ? `Use for ${selected.display_name}` : 'Use for the selected rider'}
+        </Button>
+      </div>
+    {/if}
+    <div class="row">
+      {#if connected}
+        <Button onclick={disconnect}>Disconnect</Button>
+      {:else}
+        <Button variant="primary" disabled={connecting} onclick={connect}>
+          {connecting ? 'Connecting…' : 'Connect base station'}
+        </Button>
+      {/if}
+    </div>
+    <details class="fallback">
+      <summary>No reader? Paste a scan line instead</summary>
       <label>
-        Rider display name<input name="name" required maxlength="60" placeholder="Rider name" />
-      </label><label>
-        Tag UID (optional)<input
+        JSON scan from Serial Monitor<textarea rows="3" bind:value={pasted}></textarea>
+      </label>
+      <Button onclick={parse}>Read tag</Button>
+    </details>
+  </Card>
+
+  <Card title="Register a rider">
+    <p class="hint">
+      Use your club’s own registration and permissions process first. Don’t enter safeguarding
+      documents here.
+    </p>
+    <form method="POST" action="?/register" class="stack">
+      <label>
+        Display name<input name="name" required maxlength="60" autocomplete="off" />
+      </label>
+      <label>
+        Tag (optional — read it with the base station)<input
           name="uid"
           bind:value={newUid}
           maxlength="40"
-          placeholder="Issue a tag now or later"
+          placeholder="Leave blank to issue a tag later"
+          autocomplete="off"
         />
       </label>
-    </div>
-    <button class="solid">Save rider</button>
-  </form>
-</section>
-<section class="panel">
-  <div class="section-heading">
-    <div>
-      <h2>Club register</h2>
-      <form method="GET" class="form-row">
-        <label>
-          Search name or active tag<input name="q" value={data.filters.query} maxlength="60" />
-        </label>
-        <label>
-          Status<select name="status" value={data.filters.status}>
-            <option value="active">Active</option><option value="untagged">
-              Awaiting tag
-            </option><option value="archived">Archived</option><option value="all">
-              All riders
-            </option>
-          </select>
-        </label>
-        <button>Search</button><a class="text-link" href={`/club/${data.club.id}/riders`}>
-          Clear filters
-        </a>
-      </form>
-      <p>{data.total} matching riders · Page {data.page} of {data.pages}</p>
-      <p>Each rider belongs to this club. Replacing a tag preserves their identity.</p>
-    </div>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>Rider</th><th>Status</th><th>Active tag</th><th>Manage</th></tr>
-      </thead><tbody>
-        {#each data.riders as rider}<tr>
-            <td>{rider.display_name}</td><td>
-              {rider.archived_at ? 'Archived' : 'Active'}
-            </td><td><code>{activeTag(rider.id)?.uid ?? 'Not issued'}</code></td><td>
-              <button
-                onclick={() => {
-                  selectedId = rider.id;
-                  editUid = '';
-                }}
+      <div><Button type="submit" variant="primary">Save rider</Button></div>
+    </form>
+  </Card>
+</div>
+
+<div class="register" class:with-panel={!!selected}>
+  <Card title="Club register">
+    <form method="GET" class="filters">
+      <label class="grow">
+        Search name or tag<input name="q" value={data.filters.query} maxlength="60" />
+      </label>
+      <label>
+        Show<select name="status" value={data.filters.status}>
+          <option value="active">Active</option>
+          <option value="untagged">Waiting for a tag</option>
+          <option value="archived">Archived</option>
+          <option value="all">All riders</option>
+        </select>
+      </label>
+      <Button type="submit">Search</Button>
+      <a href={`/club/${data.club.id}/riders`}>Clear</a>
+    </form>
+    <p class="hint">{data.total} riders · page {data.page} of {data.pages}</p>
+
+    {#if data.riders.length}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Rider</th><th scope="col" class="wide-only">Status</th><th
+                scope="col"
+                class="wide-only"
               >
-                Manage
-              </button>
-            </td>
-          </tr>{/each}
-      </tbody>
-    </table>
-  </div>
-  {#if !data.riders.length}<div class="empty">
-      No riders match these filters. Register a rider above or clear the filters.
-    </div>{/if}
-</section>
-<nav class="pagination" aria-label="Rider pages">
-  {#if data.page > 1}<a class="link-button" href={pageLink(data.page - 1)}>
-      Previous
-    </a>{/if}{#if data.page < data.pages}<a class="link-button" href={pageLink(data.page + 1)}>
-      Next
-    </a>{/if}
-</nav>
-{#if selected}
-  <section class="panel">
-    <div class="section-heading">
-      <h2>{selected.display_name}</h2>
-      <button onclick={() => (selectedId = '')}>Close</button>
-    </div>
-    {#if !selected.archived_at}
-      <form method="POST" action="?/tag">
-        <input type="hidden" name="riderId" value={selected.id} /><label>
-          New tag UID<input name="uid" required maxlength="40" bind:value={editUid} />
-        </label>
-        <p class="caption">
-          Saving replaces the current tag atomically. The old tag remains in history.
-        </p>
-        <button class="solid">Save tag</button>
-      </form>
-      <form method="POST" action="?/revoke">
-        <input type="hidden" name="riderId" value={selected.id} /><button
-          disabled={!activeTag(selected.id)}
-        >
-          Revoke active tag
-        </button>
-      </form>
-      <details>
-        <summary>Archive rider</summary>
-        <p>
-          Removes the rider from the active register and revokes their active tag. Historical
-          records remain.
-        </p>
-        <form method="POST" action="?/archive">
-          <input type="hidden" name="riderId" value={selected.id} /><label class="checkbox-label">
-            <input type="checkbox" name="confirm" value="yes" required />Archive {selected.display_name}
-            and revoke their tag
-          </label><button>Archive rider</button>
-        </form>
-      </details>
-    {:else}<p>
-        Archived riders cannot receive new tags. Their records remain available to the club.
-      </p>{/if}
-    <h3>Tag history</h3>
-    <p class="caption">Latest 50 assignments for this rider. Older history remains stored.</p>
-    {#each data.tags.filter((t) => t.rider_id === selected.id) as tag}<p>
-        <code>{tag.uid}</code> · {tag.revoked_at
-          ? 'Retired ' + time(tag.revoked_at)
-          : 'Active'}<small class="block">Issued {time(tag.assigned_at)}</small>
-      </p>{:else}<p>No tags issued.</p>{/each}
-  </section>
-{/if}
-<section class="panel">
-  <h2>Read a tag for registration</h2>
-  <p>
-    Connect the Core2 bench reader by USB, or paste a scan from Serial Monitor. A scan only fills a
-    UID; you still choose the rider and save.
-  </p>
-  <div class="equipment-status" role="status">{readerStatus}</div>
-  <button class="solid" disabled={connected || connecting} onclick={connect}>
-    {connecting ? 'Connecting…' : 'Connect USB reader'}
-  </button><button disabled={!connected} onclick={disconnect}>Disconnect</button>
-  <details>
-    <summary>Paste a serial scan</summary><label>
-      JSON scan<textarea rows="3" bind:value={pasted}></textarea>
-    </label><button onclick={parse}>Read UID</button>
-  </details>
-  {#if lastUid}<div class="scan-detail">
-      <strong>Captured UID: {lastUid}</strong>
-      <div class="form-row">
-        <button onclick={() => (newUid = lastUid)}>Use for new rider</button><button
-          disabled={!selected || !!selected.archived_at}
-          onclick={() => (editUid = lastUid)}
-        >
-          Use for selected rider
-        </button>
+                Tag
+              </th><th scope="col"><span class="visually-hidden">Manage</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each data.riders as rider (rider.id)}
+              {@const tag = activeTag(rider.id)}
+              <tr class:current={rider.id === selectedId}>
+                <th scope="row">
+                  {rider.display_name}<span class="mobile-meta">
+                    {rider.archived_at
+                      ? 'Archived'
+                      : tag
+                        ? `Tag ${tagSuffix(tag.uid)}`
+                        : 'Waiting for a tag'}
+                  </span>
+                </th>
+                <td class="wide-only">
+                  {#if rider.archived_at}<StatusChip>Archived</StatusChip>
+                  {:else if tag}<StatusChip tone="success">Active</StatusChip>
+                  {:else}<StatusChip tone="warn">Waiting for a tag</StatusChip>{/if}
+                </td>
+                <td class="tabular wide-only" title={tag?.uid}>{tag ? tagSuffix(tag.uid) : '—'}</td>
+                <td class="end">
+                  <Button
+                    variant={rider.id === selectedId ? 'primary' : 'secondary'}
+                    aria-pressed={rider.id === selectedId}
+                    aria-label={`Manage ${rider.display_name}`}
+                    onclick={() => manage(rider.id)}
+                  >
+                    Manage
+                  </Button>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
       </div>
-    </div>{/if}
-</section>
+    {:else}
+      <EmptyState title="No riders match">
+        Register a rider, or clear the search and filters.
+      </EmptyState>
+    {/if}
+
+    {#if data.pages > 1}
+      <nav class="pagination" aria-label="Rider pages">
+        {#if data.page > 1}<Button href={pageLink(data.page - 1)}>Previous</Button>{/if}
+        {#if data.page < data.pages}<Button href={pageLink(data.page + 1)}>Next</Button>{/if}
+      </nav>
+    {/if}
+  </Card>
+
+  {#if selected}
+    {@const tag = activeTag(selected.id)}
+    <section class="manage" aria-labelledby="manage-heading">
+      <div class="manage-head">
+        <h2 id="manage-heading" tabindex="-1" bind:this={manageHeading}>
+          {selected.display_name}
+        </h2>
+        <Button variant="quiet" onclick={() => (selectedId = '')}>Close</Button>
+      </div>
+      {#if selected.archived_at}
+        <StatusChip>Archived</StatusChip>
+        <p class="hint">Archived riders can’t receive tags. Their records stay with the club.</p>
+      {:else}
+        <div class="current-tag">
+          <span class="label">Current tag</span>
+          <span class="suffix tabular">{tag ? tagSuffix(tag.uid) : 'None'}</span>
+          {#if tag}<span class="hint">Issued {time(tag.assigned_at)}</span>{/if}
+        </div>
+        <form method="POST" action="?/tag" class="stack">
+          <input type="hidden" name="riderId" value={selected.id} />
+          <label>
+            {tag ? 'Replace with a new tag' : 'Issue a tag'}<input
+              name="uid"
+              required
+              maxlength="40"
+              bind:value={editUid}
+              placeholder="Tap the tag on the base station"
+              autocomplete="off"
+            />
+          </label>
+          <p class="hint">
+            {tag
+              ? 'The current tag stops working the moment the new one is saved. It stays in the history.'
+              : 'The rider can use the tag at the lane readers straight away.'}
+          </p>
+          <div><Button type="submit" variant="primary">Save tag</Button></div>
+        </form>
+        {#if tag}
+          <form method="POST" action="?/revoke">
+            <input type="hidden" name="riderId" value={selected.id} />
+            <Button type="submit" variant="danger">Revoke current tag</Button>
+          </form>
+        {/if}
+        <details>
+          <summary>Archive rider</summary>
+          <p class="hint">
+            Removes the rider from the active register and revokes their tag. Their history is kept.
+          </p>
+          <form method="POST" action="?/archive" class="stack">
+            <input type="hidden" name="riderId" value={selected.id} />
+            <label class="checkbox-label">
+              <input type="checkbox" name="confirm" value="yes" required />Archive {selected.display_name}
+              and revoke their tag
+            </label>
+            <div><Button type="submit" variant="danger">Archive rider</Button></div>
+          </form>
+        </details>
+      {/if}
+      <h3>Tag history</h3>
+      <ul class="history">
+        {#each data.tags.filter((t) => t.rider_id === selected.id) as entry (entry.id)}
+          <li>
+            <span class="tabular" title={entry.uid}>{tagSuffix(entry.uid)}</span>
+            <span>
+              {#if entry.revoked_at}Retired {time(entry.revoked_at)}{:else}<StatusChip
+                  tone="success"
+                >
+                  Active
+                </StatusChip>{/if}
+              <small class="block">Issued {time(entry.assigned_at)}</small>
+            </span>
+          </li>
+        {:else}
+          <li class="hint">No tags issued yet.</li>
+        {/each}
+      </ul>
+      <p class="hint">Latest 50 assignments. Older history is kept.</p>
+    </section>
+  {/if}
+</div>
+
+<p class="caption">Saved to your club register. Not yet connected to lane readers or timing.</p>
+
+<style>
+  .top {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .register {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+  .register.with-panel {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  }
+  .row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+  }
+  .stack label,
+  .filters label {
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .hint,
+  .status {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .captured,
+  .current-tag {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius);
+    background: var(--raised);
+  }
+  .captured {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-edge);
+  }
+  .label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .suffix {
+    font: 700 2.25rem/1 var(--font-display);
+  }
+  .captured code {
+    font-size: 0.75rem;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .fallback {
+    margin: 0;
+    padding: 0.5rem 0 0;
+  }
+  .filters {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .filters label {
+    flex: 0 1 180px;
+  }
+  .filters .grow {
+    flex: 1 1 220px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--edge);
+    vertical-align: middle;
+  }
+  thead th {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  tbody th {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+  }
+  td.end {
+    text-align: right;
+  }
+  tr.current {
+    background: var(--accent-soft);
+  }
+  .pagination {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .manage {
+    background: var(--surface);
+    border: 1px solid var(--accent-edge);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    position: sticky;
+    top: 1rem;
+  }
+  .manage-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .manage h2 {
+    margin: 0;
+  }
+  .manage h3 {
+    margin: 0.5rem 0 0;
+    font-size: 1rem;
+  }
+  .manage details {
+    margin: 0;
+  }
+  .history {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .history li {
+    display: flex;
+    gap: 0.9rem;
+    align-items: baseline;
+    font-size: 0.875rem;
+  }
+  .history li > span:first-child {
+    font: 700 1.125rem var(--font-display);
+    min-width: 4rem;
+  }
+  .mobile-meta {
+    display: none;
+  }
+  @media (max-width: 600px) {
+    .wide-only {
+      display: none;
+    }
+    .mobile-meta {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+  }
+  @media (max-width: 960px) {
+    .top,
+    .register.with-panel {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .manage {
+      position: static;
+    }
+  }
+</style>

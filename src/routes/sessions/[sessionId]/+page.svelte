@@ -7,7 +7,7 @@
 </script>
 
 <svelte:head><title>{session.name} · JNS SPLIT</title></svelte:head>
-<main class="account-page wide">
+<div class="page-stack">
   <span class="eyebrow">{data.detail.clubName}</span>
   <h1>{session.name}</h1>
   <a
@@ -170,4 +170,4 @@
         </small>
       </p>{/each}
   </section>
-</main>
+</div>

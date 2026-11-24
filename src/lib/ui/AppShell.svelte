@@ -12,6 +12,7 @@
     area,
     nav = [],
     homeHref = '/app',
+    context,
     children
   }: {
     shell: ShellData;
@@ -20,6 +21,8 @@
     area: string;
     nav?: NavItem[];
     homeHref?: string;
+    /** Full name of the current role and place, e.g. "Club admin · Riverside BMX Club". */
+    context: string;
     children: Snippet;
   } = $props();
 
@@ -32,6 +35,10 @@
 <div class="ui-shell">
   <aside class="sidebar">
     <div class="brand"><Wordmark href={homeHref} /></div>
+    <p class="context">
+      <span class="context-label">You’re in</span>
+      <span class="context-name">{context}</span>
+    </p>
     <AccountMenu {shell} {theme} />
     {#if nav.length}
       <nav aria-label={area}>
@@ -70,6 +77,29 @@
   }
   .brand {
     padding: 0 0.6rem;
+  }
+  .context {
+    margin: 0;
+    padding: 0.7rem 0.75rem;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-edge);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .context-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .context-name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    line-height: 1.3;
   }
   ul {
     list-style: none;

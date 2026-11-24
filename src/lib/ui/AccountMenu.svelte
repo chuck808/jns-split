@@ -15,7 +15,7 @@
   <summary>
     <span class="avatar" aria-hidden="true">{initials(shell.email.split('@')[0])}</span>
     <span class="who">
-      <span class="role">{current?.label ?? 'Your account'}</span>
+      <span class="role">Account and roles</span>
       <span class="email">{shell.email}</span>
     </span>
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -29,6 +29,10 @@
     </svg>
   </summary>
   <div class="panel-menu">
+    {#if current}
+      <p class="heading">You’re in</p>
+      <p class="here">{current.label}</p>
+    {/if}
     {#if others.length}
       <p class="heading">Switch to</p>
       <ul>
@@ -143,6 +147,15 @@
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--muted);
+  }
+  .here {
+    margin: 0 0.5rem 0.35rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.9375rem;
   }
   ul {
     list-style: none;

@@ -14,6 +14,13 @@
   ]);
 </script>
 
-<AppShell shell={data.shell} theme={data.theme} area="Club" {nav} homeHref={base}>
+<AppShell
+  shell={data.shell}
+  theme={data.theme}
+  area="Club"
+  context={`Club admin · ${data.club.name}`}
+  {nav}
+  homeHref={base}
+>
   {@render children()}
 </AppShell>

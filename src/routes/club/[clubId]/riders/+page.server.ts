@@ -4,6 +4,7 @@ import { requireAdmin, messageForDatabaseError } from '#lib/server/access';
 import { normalizeUid } from '#lib/session';
 import { rosterFilters, type Roster } from '#lib/club-workspace';
 import { riderDetailsFromForm, type RiderSettings } from '#lib/rider-details';
+import type { CorrectionSummary } from '#lib/family';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -39,7 +40,17 @@ export const load: PageServerLoad = async (event) => {
     error(503, 'Unable to load riders. Check the club workspace migration has been applied.');
   const riderSettings = await loadSettings(client, event.params.clubId);
   const roster = data as Roster;
-  return { ...roster, fieldValues: roster.fieldValues ?? [], filters, riderSettings };
+  // Before migration 012 this simply comes back empty.
+  const corrections = await client.rpc('club_correction_requests', {
+    p_club_id: event.params.clubId
+  });
+  return {
+    ...roster,
+    fieldValues: roster.fieldValues ?? [],
+    filters,
+    riderSettings,
+    corrections: (corrections.error ? [] : corrections.data) as CorrectionSummary[]
+  };
 };
 export const actions: Actions = {
   register: async (event) => {

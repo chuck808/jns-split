@@ -102,6 +102,19 @@
 />
 
 {#if form?.message}<p class="feedback" class:error={!form.ok} role="status">{form.message}</p>{/if}
+{#if data.corrections.length}
+  <p class="notice corrections" role="status">
+    <strong>
+      {data.corrections.length === 1
+        ? '1 correction request'
+        : `${data.corrections.length} correction requests`}
+    </strong>
+    from families:
+    {#each data.corrections.filter((c, i, all) => all.findIndex((x) => x.rider_id === c.rider_id) === i) as c, i (c.rider_id)}
+      {i ? ', ' : ''}<a href={`/club/${data.club.id}/riders/${c.rider_id}`}>{c.display_name}</a>
+    {/each}
+  </p>
+{/if}
 
 <div class="top">
   <Card title="Base station" tone={lastUid ? 'highlight' : 'default'}>
@@ -265,6 +278,9 @@
         </h2>
         <Button variant="quiet" onclick={() => (selectedId = '')}>Close</Button>
       </div>
+      <a class="family-link" href={`/club/${data.club.id}/riders/${selected.id}`}>
+        Family access and invitations →
+      </a>
       {#if !selected.archived_at}
         <details class="edit" open={!selected.birth_year}>
           <summary>
@@ -503,6 +519,12 @@
     gap: 0.9rem;
     position: sticky;
     top: 1rem;
+  }
+  .family-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    font-weight: 600;
   }
   .manage-head {
     display: flex;

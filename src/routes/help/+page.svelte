@@ -63,7 +63,31 @@
   </div>
 </Section>
 
-<Section id="base-station" eyebrow="Equipment" title="Using the base station">
+<Section id="family" eyebrow="Family access" title="Parents, guardians and riders">
+  <div class="cols">
+    <div class="block">
+      <h3>For club admins</h3>
+      <p>
+        In Riders & tags, choose <strong>Manage</strong> on a rider, then
+        <strong>Family access</strong>. Your club’s age bands (in Settings) decide whether you
+        invite a parent or guardian, the rider, or choose. Check who they are with your club’s usual
+        process, then create the invitation. No email is sent yet: ask them to sign in with that
+        address within seven days.
+      </p>
+    </div>
+    <div class="block">
+      <h3>For parents and riders</h3>
+      <p>
+        Sign in with the email the club used. Open
+        <strong>Riders and family</strong> and accept. You’ll see the details the club holds, can ask
+        for a correction, and can choose how the name appears on the scoreboard. Each child needs their
+        own invitation.
+      </p>
+    </div>
+  </div>
+</Section>
+
+<Section id="base-station" tone="raised" eyebrow="Equipment" title="Using the base station">
   <div class="cols">
     <div class="block">
       <h3>Connecting</h3>
@@ -86,7 +110,7 @@
   </p>
 </Section>
 
-<Section tone="raised" eyebrow="Questions" title="Good to know">
+<Section eyebrow="Questions" title="Good to know">
   <Faq items={faqs} />
   <p class="note">Still stuck? <a href="/contact">Here’s how to get in touch</a>.</p>
 </Section>

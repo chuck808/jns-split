@@ -307,7 +307,7 @@ A lane check-in is pending until the rider starts. It needs an expiry and a coac
 
 ### Rider onboarding
 
-*Implemented in migration 011 (core and club-defined fields, age rule, invitation bands, scoreboard default). Invitations themselves arrive with family access.*
+*Implemented in migration 011 (core and club-defined fields, age rule, invitation bands, scoreboard default) and migration 012 (rider and guardian invitations, links, scoreboard name choice, correction requests; see `family-access-setup.md`). Results for linked riders arrive with recorded results.*
 
 - **Core fields, every club and sport:** display name, year of birth, who to invite (rider, guardian or nobody yet) with an email, a tick that the club's own permissions process is complete, and the tag (read by the base station, never typed).
 - **Club-defined optional fields:** up to two, labelled by the club (for example British Cycling licence, KNWU licentie, USA BMX membership). They point to the club's own records and are never used for identity or duplicate detection.

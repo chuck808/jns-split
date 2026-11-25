@@ -11,6 +11,8 @@ export interface SessionEffort {
   /** Saved with the effort: never the session's current settings. */
   distance_metres: number;
   start_mode: string;
+  /** Coach note: only sent to the session's coaches and club admins. */
+  note?: string | null;
 }
 /** session_results RPC: the newest efforts to list, and bests over the whole session. */
 export interface SessionResultsData {

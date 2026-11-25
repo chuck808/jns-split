@@ -42,6 +42,19 @@ A coach sees their own assigned sessions only, so a coach on just tonight's sess
    "New best". To see bests and gaps you need Live results, which you'd only send from real
    timing equipment or for a fictional rider in a throwaway session.
 
+## Coach notes (migration 017)
+
+Apply `supabase/migrations/202611250017_effort_notes.sql` the same way.
+
+Tap any time in the squad grid to add a short note (up to 280 characters), such as "Late off the
+gate". A dot marks times with a note, and all of a session's notes are listed under the grid.
+Notes also show on the session page's results.
+
+- One shared note per effort. Any coach on the session, or a club admin, can write, change or
+  clear it. The last writer and time are kept.
+- **Seen only by the session's coaches and club admins.** Riders and families never see notes.
+- Notes can be added after the session is closed. They never change the result itself.
+
 ## Not yet
 
-Coach notes per effort, a rest timer you can start yourself, and lane check-in from the readers.
+A rest timer you can start yourself, and lane check-in from the readers.

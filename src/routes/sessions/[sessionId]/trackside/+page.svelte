@@ -24,6 +24,52 @@
   let fresh: Set<string> = $state(new Set());
 
   const rows = $derived(buildGrid(snapshot));
+
+  // Coach notes: one shared note per effort, for the session's coaches and club admins.
+  let noteFor: string | null = $state(null);
+  let noteText = $state('');
+  let noteSaving = $state(false);
+  let noteMessage = $state('');
+  const noteCell = $derived(
+    noteFor ? (rows.flatMap((r) => r.cells).find((c) => c.id === noteFor) ?? null) : null
+  );
+  const notes = $derived(
+    rows
+      .flatMap((r) => r.cells.map((c, i) => ({ ...c, n: i + 1, name: r.name })))
+      .filter((c) => c.note)
+      .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at))
+  );
+  function openNote(id: string, existing: string | null | undefined) {
+    noteFor = id;
+    noteText = existing ?? '';
+    noteMessage = '';
+    queueMicrotask(() => document.getElementById('note-text')?.focus());
+  }
+  async function saveNote(clear = false) {
+    if (!noteFor) return;
+    noteSaving = true;
+    noteMessage = '';
+    try {
+      const response = await fetch(`/sessions/${snapshot.session.id}/trackside/notes`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ effortId: noteFor, note: clear ? '' : noteText })
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.message ?? 'The note couldn’t be saved.');
+      const id = noteFor;
+      snapshot = {
+        ...snapshot,
+        efforts: snapshot.efforts.map((e) => (e.id === id ? { ...e, note: body.note } : e))
+      };
+      noteFor = null;
+    } catch (e) {
+      noteMessage = (e as Error).message;
+    } finally {
+      noteSaving = false;
+    }
+  }
+
   const lanes = $derived(latestByLane(rows, snapshot.session.lane_count));
   const columns = $derived(Math.max(1, ...rows.map((r) => r.cells.length)));
   const anyDemo = $derived(snapshot.efforts.some((e) => e.is_test));
@@ -183,6 +229,47 @@
       Times appear here within a couple of seconds of the timing equipment saving them.
     </EmptyState>
   {:else}
+    {#if noteCell}
+      <form
+        class="note-editor"
+        onsubmit={(e) => {
+          e.preventDefault();
+          void saveNote();
+        }}
+      >
+        <label for="note-text">
+          Note for <strong>{rows.find((r) => r.cells.some((c) => c.id === noteFor))?.name}</strong>,
+          {noteCell.outcome === 'completed'
+            ? `${time(noteCell.elapsed_ms)}s`
+            : OUTCOME_LABELS[noteCell.outcome]}
+          in lane {noteCell.lane}
+        </label>
+        <textarea
+          id="note-text"
+          bind:value={noteText}
+          maxlength="280"
+          rows="2"
+          placeholder="e.g. Late off the gate"></textarea>
+        <div class="note-actions">
+          <span class="note">
+            {280 - noteText.length} left · seen by this session’s coaches and club admins only
+          </span>
+          <span class="note-buttons">
+            {#if noteCell.note}<Button
+                type="button"
+                variant="quiet"
+                disabled={noteSaving}
+                onclick={() => saveNote(true)}
+              >
+                Clear note
+              </Button>{/if}
+            <Button type="button" variant="quiet" onclick={() => (noteFor = null)}>Cancel</Button>
+            <Button type="submit" variant="primary" disabled={noteSaving}>Save note</Button>
+          </span>
+        </div>
+        {#if noteMessage}<p class="feedback error" role="alert">{noteMessage}</p>{/if}
+      </form>
+    {/if}
     <div class="table-wrap">
       <table>
         <thead>
@@ -206,16 +293,19 @@
                   class:best={c?.newBest}
                   class:demo={c?.is_test}
                   class:fresh={c && fresh.has(c.id)}
-                  title={c
-                    ? `Lane ${c.lane}${c.newBest ? ' · new best' : ''}${c.is_test ? ' · demo' : ''}`
-                    : undefined}
+                  class:selected={c && noteFor === c.id}
                 >
                   {#if c}
-                    {c.outcome === 'completed'
-                      ? time(c.elapsed_ms)
-                      : short[c.outcome]}{#if c.newBest}<span class="sr-only">
-                        new best
-                      </span>{/if}{#if c.is_test}<span class="sr-only"> demo</span>{/if}
+                    <button
+                      type="button"
+                      class="cell-button"
+                      onclick={() => openNote(c.id, c.note)}
+                      title={`Lane ${c.lane}${c.newBest ? ' · new best' : ''}${c.is_test ? ' · demo' : ''}${c.note ? ` · note: ${c.note}` : ' · add a note'}`}
+                      aria-label={`${row.name}, effort ${i + 1}, ${c.outcome === 'completed' ? time(c.elapsed_ms) + ' seconds' : OUTCOME_LABELS[c.outcome]}${c.newBest ? ', new best' : ''}${c.is_test ? ', demo' : ''}${c.note ? ', has a note. Edit note' : '. Add a note'}`}
+                    >
+                      {c.outcome === 'completed' ? time(c.elapsed_ms) : short[c.outcome]}
+                      {#if c.note}<span class="note-dot" aria-hidden="true"></span>{/if}
+                    </button>
                   {/if}
                 </td>
               {/each}
@@ -248,9 +338,24 @@
         </li>{/if}
       <li>DNF did not finish · CXL cancelled · INV invalid</li>
     </ul>
+    {#if notes.length}
+      <h3 class="notes-heading">Notes</h3>
+      <ul class="notes-list">
+        {#each notes as n (n.id)}
+          <li>
+            <button type="button" class="link-button" onclick={() => openNote(n.id, n.note)}>
+              {n.name} · effort {n.n} ·
+              {n.outcome === 'completed' ? `${time(n.elapsed_ms)}s` : OUTCOME_LABELS[n.outcome]}
+            </button>
+            <span>{n.note}</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
     <p class="note">
-      Times in seconds, never rounded up. <strong>Previous</strong> is the rider’s best Live time at
-      this distance and start type before today, from sessions you can open.
+      Tap a time to add a note. Times in seconds, never rounded up. <strong>Previous</strong> is the
+      rider’s best Live time at this distance and start type before today, from sessions you can
+      open.
       <strong>Rest</strong> is time since their last effort.
     </p>
   {/if}
@@ -364,6 +469,100 @@
   .key.demo {
     color: var(--muted);
     font-style: italic;
+  }
+  .cell {
+    padding: 0;
+  }
+  .cell-button {
+    position: relative;
+    width: 100%;
+    min-height: var(--touch);
+    padding: 0.55rem 0.6rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-style: inherit;
+    font-weight: inherit;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+  .cell-button:hover {
+    background: var(--raised);
+  }
+  .cell-button:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: -3px;
+  }
+  .cell.selected {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  .note-dot {
+    position: absolute;
+    top: 6px;
+    right: 4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--info-text);
+  }
+  .note-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    padding: 0.9rem;
+    border-radius: var(--radius);
+    background: var(--raised);
+  }
+  .note-editor label {
+    margin: 0;
+  }
+  .note-editor textarea {
+    width: 100%;
+  }
+  .note-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .note-buttons {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .notes-heading {
+    margin: 1rem 0 0.4rem;
+    font-size: 1rem;
+  }
+  .notes-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .notes-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .link-button {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.8125rem;
+    text-decoration: underline;
+    cursor: pointer;
+    min-height: auto;
   }
   .cell.fresh {
     outline: 2px solid var(--accent-edge);

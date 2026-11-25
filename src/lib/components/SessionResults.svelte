@@ -90,6 +90,7 @@
               <td>
                 {e.rider_name}
                 {#if e.is_test}<StatusChip tone="warn">Demo</StatusChip>{/if}
+                {#if e.note}<span class="effort-note">Note: {e.note}</span>{/if}
               </td>
               <td class="num">
                 {e.outcome === 'completed'
@@ -186,6 +187,13 @@
     td {
       white-space: normal;
     }
+  }
+  .effort-note {
+    display: block;
+    max-width: 32ch;
+    white-space: normal;
+    font-size: 0.8125rem;
+    color: var(--muted);
   }
   tr.demo td {
     color: var(--muted);

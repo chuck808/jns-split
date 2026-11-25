@@ -85,3 +85,18 @@ Apply `supabase/migrations/202611250015_result_integrity.sql` the same way as 01
 ## Not yet
 
 Lane check-in from the reader, a progress chart, coach notes and corrections are later steps.
+
+## Progress chart (migration 018)
+
+Apply `supabase/migrations/202611250018_rider_progress.sql` the same way. In **Riders and family**,
+the Results card then shows a progress chart for each distance and start type the rider has
+ridden. Each point is one session's best Live time, so the chart shows the trend without the noise
+of every effort. Faster times are drawn higher, so an improving rider's line rises.
+
+- Worked out over the rider's whole history in the database (up to the latest 100 sessions per
+  chart), never from the capped list of efforts.
+- A single session shows as a sentence, not a one-point chart.
+- Hover or tap a point for the session, date and number of efforts. With the keyboard, focus the
+  chart and use the left and right arrow keys; screen readers announce each session.
+- **Show as a table** under each chart gives the same figures as a table.
+- Demo results and coach notes never appear.

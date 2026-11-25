@@ -11,64 +11,73 @@ export interface TracksideData {
     activity: string;
     status: string;
   };
-  efforts: SessionEffort[];
+  /** Every effort in the session; `efforts` holds only the newest 500. */
+  total: number;
+  efforts: (SessionEffort & { new_best: boolean })[];
+  /** Per rider over the WHOLE session, worked out in the database. */
+  riders: {
+    rider_id: string;
+    rider_name: string;
+    best_today: number | null;
+    efforts: number;
+    last_at: string;
+  }[];
   participants: { rider_id: string; display_name: string }[];
   previousBests: { rider_id: string; best_ms: number }[];
 }
 
 export interface GridCell extends SessionEffort {
-  /** Faster than every earlier Live time we can see for this rider (same distance and start). */
+  /** Faster than the previous best and every earlier Live effort this session (database). */
   newBest: boolean;
 }
+
 export interface GridRow {
   rider_id: string;
   name: string;
   cells: GridCell[];
+  /** Whole-session figures, so a capped list never hides an early best. */
   bestToday: number | null;
   previousBest: number | null;
   lastAt: string | null;
+  total: number;
 }
 
 /**
  * One row per rider: everyone with an effort, plus a coached session's riders still to ride.
- * Demo efforts appear but never set or beat a best.
+ * "New best" marks and bests come from the database over the whole session; demo efforts
+ * never count.
  */
 export function buildGrid(data: TracksideData): GridRow[] {
   const previous = new Map(data.previousBests.map((b) => [b.rider_id, b.best_ms]));
   const rows = new Map<string, GridRow>();
-  for (const p of data.participants)
-    rows.set(p.rider_id, {
-      rider_id: p.rider_id,
-      name: p.display_name,
-      cells: [],
-      bestToday: null,
-      previousBest: previous.get(p.rider_id) ?? null,
-      lastAt: null
-    });
+  const row = (id: string, name: string) => {
+    let r = rows.get(id);
+    if (!r) {
+      r = {
+        rider_id: id,
+        name,
+        cells: [],
+        bestToday: null,
+        previousBest: previous.get(id) ?? null,
+        lastAt: null,
+        total: 0
+      };
+      rows.set(id, r);
+    }
+    return r;
+  };
+  for (const p of data.participants) row(p.rider_id, p.display_name);
+  for (const s of data.riders) {
+    const r = row(s.rider_id, s.rider_name);
+    r.name = s.rider_name;
+    r.bestToday = s.best_today;
+    r.lastAt = s.last_at;
+    r.total = s.efforts;
+  }
   const ordered = [...data.efforts].sort(
     (a, b) => a.recorded_at.localeCompare(b.recorded_at) || a.id.localeCompare(b.id)
   );
-  for (const e of ordered) {
-    let row = rows.get(e.rider_id);
-    if (!row) {
-      row = {
-        rider_id: e.rider_id,
-        name: e.rider_name,
-        cells: [],
-        bestToday: null,
-        previousBest: previous.get(e.rider_id) ?? null,
-        lastAt: null
-      };
-      rows.set(e.rider_id, row);
-    }
-    const live = !e.is_test && e.outcome === 'completed' && e.elapsed_ms !== null;
-    const benchmark = [row.previousBest, row.bestToday].filter((v): v is number => v !== null);
-    const newBest = live && benchmark.length > 0 && e.elapsed_ms! < Math.min(...benchmark);
-    if (live && (row.bestToday === null || e.elapsed_ms! < row.bestToday))
-      row.bestToday = e.elapsed_ms;
-    row.cells.push({ ...e, newBest });
-    row.lastAt = e.recorded_at;
-  }
+  for (const e of ordered) row(e.rider_id, e.rider_name).cells.push({ ...e, newBest: e.new_best });
   // Riders who've ridden first, most recent at the top; then those still to ride, by name.
   return [...rows.values()].sort((a, b) =>
     a.lastAt && b.lastAt

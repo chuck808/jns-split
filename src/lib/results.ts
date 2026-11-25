@@ -8,6 +8,22 @@ export interface SessionEffort {
   elapsed_ms: number | null;
   is_test: boolean;
   recorded_at: string;
+  /** Saved with the effort: never the session's current settings. */
+  distance_metres: number;
+  start_mode: string;
+}
+/** session_results RPC: the newest efforts to list, and bests over the whole session. */
+export interface SessionResultsData {
+  total: number;
+  efforts: SessionEffort[];
+  bests: {
+    rider_id: string;
+    rider_name: string;
+    distance_metres: number;
+    start_mode: string;
+    best_ms: number;
+    count: number;
+  }[];
 }
 export type Outcome = 'completed' | 'dnf' | 'cancelled' | 'invalid';
 
@@ -49,32 +65,6 @@ export function averageSpeed(distanceMetres: number, ms: number | null): string 
   return ((Number(distanceMetres) / (ms / 1000)) * 3.6).toFixed(1);
 }
 
-/** Each rider's best completed live effort in a session, fastest first. Demo efforts never count. */
-export function sessionBests(efforts: SessionEffort[]) {
-  const best = new Map<
-    string,
-    { rider_id: string; rider_name: string; best_ms: number; count: number }
-  >();
-  for (const e of efforts) {
-    if (e.is_test || e.outcome !== 'completed' || e.elapsed_ms === null) continue;
-    const current = best.get(e.rider_id);
-    if (!current)
-      best.set(e.rider_id, {
-        rider_id: e.rider_id,
-        rider_name: e.rider_name,
-        best_ms: e.elapsed_ms,
-        count: 1
-      });
-    else {
-      current.count++;
-      if (e.elapsed_ms < current.best_ms) current.best_ms = e.elapsed_ms;
-    }
-  }
-  return [...best.values()].sort(
-    (a, b) => a.best_ms - b.best_ms || a.rider_name.localeCompare(b.rider_name)
-  );
-}
-
 export const startLabel = (mode: string) => (mode === 'flying' ? 'Flying' : 'Standing');
-export const groupLabel = (g: { distance_metres: number; start_mode: string; activity: string }) =>
+export const groupLabel = (g: { distance_metres: number; start_mode: string; activity?: string }) =>
   `${Number(g.distance_metres)} m ${startLabel(g.start_mode).toLowerCase()}${g.activity === 'free_ride' ? ' · open practice' : ''}`;

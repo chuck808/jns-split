@@ -170,7 +170,7 @@ test('recorded results: controller uploads, idempotency, demo separation and acc
     await rejects('select * from efforts', [], '42501');
     await rejects('update efforts set elapsed_ms=1', [], '42501');
     await rejects('delete from efforts', [], '42501');
-    let results = await value('select session_results($1)', [coached]);
+    const results = (await value('select session_results($1)', [coached])).efforts;
     assert.equal(results.length, 4);
     assert.deepEqual(
       results.map((e: any) => [e.rider_name, e.outcome, e.elapsed_ms, e.is_test]),
@@ -191,7 +191,7 @@ test('recorded results: controller uploads, idempotency, demo separation and acc
     await as(admin);
     await db.query('select assign_session_coach($1,$2,false)', [coached, coach]);
     await as(coach);
-    assert.equal((await value('select session_results($1)', [coached])).length, 4);
+    assert.equal((await value('select session_results($1)', [coached])).efforts.length, 4);
     await as(outsider);
     await rejects('select session_results($1)', [coached], '42501');
 

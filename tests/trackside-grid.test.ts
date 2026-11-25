@@ -18,13 +18,12 @@ const effort = (
   elapsed_ms: ms,
   is_test: false,
   recorded_at: `2026-11-24T18:${String(minute).padStart(2, '0')}:00Z`,
+  distance_metres: 20,
+  start_mode: 'flying',
+  new_best: false,
   ...extra
 });
-const data = (
-  efforts: any[],
-  previousBests: any[] = [],
-  participants: any[] = []
-): TracksideData => ({
+const data = (over: Partial<TracksideData>): TracksideData => ({
   now: '2026-11-24T18:30:00Z',
   session: {
     id: 's',
@@ -35,53 +34,93 @@ const data = (
     activity: 'coached',
     status: 'planned'
   },
-  efforts,
-  participants,
-  previousBests
+  total: 0,
+  efforts: [],
+  riders: [],
+  participants: [],
+  previousBests: [],
+  ...over
 });
 
-test('new bests beat the previous best and earlier efforts today; demo and DNF never count', () => {
-  const rows = buildGrid(
-    data(
-      [
-        effort('1', 'a', 1, 1430, 1), // slower than previous 1420
-        effort('2', 'a', 1, 1410, 3), // beats 1420: new best
-        effort('3', 'a', 1, 1415, 5), // slower than 1410 today
-        effort('4', 'a', 1, 1000, 7, { is_test: true }), // demo: never a best
-        effort('5', 'a', 1, null, 9), // DNF
-        effort('6', 'a', 1, 1405, 11) // beats 1410: new best
+test('whole-session figures win over the capped list, so an early best is never lost', () => {
+  // The list holds only Alex's latest two efforts; the database says his best today is 1.300.
+  const [a] = buildGrid(
+    data({
+      total: 600,
+      efforts: [
+        effort('599', 'a', 1, 1410, 28),
+        effort('600', 'a', 1, 1405, 29, { new_best: false })
       ],
-      [{ rider_id: 'a', best_ms: 1420 }]
-    )
+      riders: [
+        {
+          rider_id: 'a',
+          rider_name: 'Alex',
+          best_today: 1300,
+          efforts: 600,
+          last_at: '2026-11-24T18:29:00Z'
+        }
+      ],
+      previousBests: [{ rider_id: 'a', best_ms: 1420 }]
+    })
   );
-  const a = rows[0];
+  assert.equal(a.bestToday, 1300);
+  assert.equal(a.total, 600);
+  assert.equal(a.previousBest, 1420);
+  assert.deepEqual(
+    a.cells.map((c) => [c.id, c.newBest]),
+    [
+      ['599', false],
+      ['600', false]
+    ]
+  );
+});
+
+test('new-best marks come from the database as sent', () => {
+  const [a] = buildGrid(
+    data({
+      efforts: [effort('1', 'a', 1, 1430, 1), effort('2', 'a', 1, 1410, 3, { new_best: true })],
+      riders: [
+        {
+          rider_id: 'a',
+          rider_name: 'Alex',
+          best_today: 1410,
+          efforts: 2,
+          last_at: '2026-11-24T18:03:00Z'
+        }
+      ]
+    })
+  );
   assert.deepEqual(
     a.cells.map((c) => c.newBest),
-    [false, true, false, false, false, true]
-  );
-  assert.equal(a.bestToday, 1405);
-  assert.equal(a.previousBest, 1420);
-});
-
-test('without a previous best, the first time sets the bar and only later improvements are marked', () => {
-  const [s] = buildGrid(data([effort('1', 's', 2, 1500, 1), effort('2', 's', 2, 1490, 2)]));
-  assert.deepEqual(
-    s.cells.map((c) => c.newBest),
     [false, true]
   );
-  assert.equal(s.previousBest, null);
 });
 
 test('riders still to ride are listed after those who have ridden, newest first', () => {
   const rows = buildGrid(
-    data(
-      [effort('1', 'a', 1, 1430, 1), effort('2', 's', 2, 1500, 4)],
-      [],
-      [
+    data({
+      efforts: [effort('1', 'a', 1, 1430, 1), effort('2', 's', 2, 1500, 4)],
+      riders: [
+        {
+          rider_id: 'a',
+          rider_name: 'Alex',
+          best_today: 1430,
+          efforts: 1,
+          last_at: '2026-11-24T18:01:00Z'
+        },
+        {
+          rider_id: 's',
+          rider_name: 'Sam',
+          best_today: 1500,
+          efforts: 1,
+          last_at: '2026-11-24T18:04:00Z'
+        }
+      ],
+      participants: [
         { rider_id: 'p', display_name: 'Priya' },
         { rider_id: 'a', display_name: 'Alex' }
       ]
-    )
+    })
   );
   assert.deepEqual(
     rows.map((r) => [r.name, r.cells.length]),

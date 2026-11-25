@@ -76,6 +76,8 @@ export function sessionError(code: string) {
     return 'Someone changed this session. Refresh the page before saving again.';
   if (code === '22023')
     return 'This session is closed, the coach is no longer approved, or a field is invalid. Refresh and check the values.';
+  if (code === '23514')
+    return 'Results have been recorded for this session, so its distance, start type and type of session can’t change. Plan a new session for a different setup.';
   return 'Unable to save. Check the session migration and try again.';
 }
 export const sessionDate = (v: string | null) =>

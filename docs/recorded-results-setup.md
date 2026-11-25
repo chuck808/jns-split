@@ -67,6 +67,17 @@ Saved efforts are permanent and keep a copy of the session's distance, start typ
 the rider's name, so later edits don't change old results. Revoking a controller keeps the results
 it saved.
 
+## Sessions lock once results exist (migration 015)
+
+Apply `supabase/migrations/202611250015_result_integrity.sql` the same way as 013.
+
+- Once a session has any result, its **distance**, **start type** and **type of session** can't
+  change, so the session can never misdescribe its results. Its name, date and lane count still
+  can. To ride a different setup, plan a new session.
+- Speeds and bests always use the distance and start type saved with each effort.
+- Bests, counts and "new best" marks are worked out over the whole session in the database. Only
+  the list on screen is capped at the newest 500, and the page says so when it is.
+
 ## Not yet
 
 Lane check-in from the reader, a progress chart, coach notes and corrections are later steps.

@@ -13,6 +13,31 @@ export interface SessionEffort {
   start_mode: string;
   /** Coach note: only sent to the session's coaches and club admins. */
   note?: string | null;
+  /** Corrections (migration 019): the effort is shown as corrected; the original is kept. */
+  corrected?: boolean;
+  correction_reason?: string | null;
+  /** Set when the effort was moved from the rider it was measured against. */
+  original_rider_name?: string | null;
+}
+export interface CorrectionPanel {
+  effort: SessionEffort;
+  candidates: { rider_id: string; display_name: string }[];
+  history: {
+    seq: number;
+    invalid: boolean;
+    rider_name: string | null;
+    reason: string;
+    created_at: string;
+    by_email: string;
+  }[];
+}
+export function correctionError(code: string): string {
+  if (code === '42501') return 'You can’t correct results in this session.';
+  if (code === '23514')
+    return 'That rider wasn’t in this session. Choose someone on its list or who rode in it.';
+  if (code === '22023')
+    return 'Check the correction: give a reason, choose a different rider, or refresh if someone else has just corrected it.';
+  return 'The correction couldn’t be saved. Check that migration 019 is applied and try again.';
 }
 /** session_results RPC: the newest efforts to list, and bests over the whole session. */
 export interface SessionResultsData {

@@ -1,8 +1,8 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireUser } from '#lib/server/access';
 import { uuid, type ClubCoaches } from '#lib/coaches';
-import type { SessionResultsData } from '#lib/results';
+import { correctionError, type CorrectionPanel, type SessionResultsData } from '#lib/results';
 import {
   participantFilters,
   participantError,
@@ -68,10 +68,25 @@ export const load: PageServerLoad = async (event) => {
   }
   // Before migration 013 there are no results to show.
   const results = await client.rpc('session_results', { p_session_id: event.params.sessionId });
+  // ?correct=<effort id> opens the correction panel for one effort.
+  let correction: CorrectionPanel | null = null;
+  const correctId = event.url.searchParams.get('correct') ?? '';
+  const effort = (results.data as SessionResultsData | null)?.efforts?.find(
+    (e) => e.id === correctId
+  );
+  if (effort) {
+    const [candidates, history] = await Promise.all([
+      client.rpc('effort_move_candidates', { p_effort_id: effort.id }),
+      client.rpc('effort_correction_history', { p_effort_id: effort.id })
+    ]);
+    if (!candidates.error && !history.error)
+      correction = { effort, candidates: candidates.data, history: history.data };
+  }
   return {
     detail,
     directory,
     results: (results.error ? null : results.data) as SessionResultsData | null,
+    correction,
     participants: participantResult.data as ParticipantPage,
     candidates,
     participantFilters: filters
@@ -167,6 +182,31 @@ export const actions: Actions = {
     });
     if (problem) return fail(400, { message: sessionError(problem.code), ok: false });
     return { message: 'Session plan updated.', ok: true };
+  },
+  correct: async (event) => {
+    const { client } = requireUser(event);
+    if (!uuid(event.params.sessionId)) error(404, 'Session not found.');
+    const form = await event.request.formData();
+    const effortId = String(form.get('effortId') ?? '');
+    const action = String(form.get('action') ?? '');
+    const riderId = String(form.get('riderId') ?? '');
+    const reason = String(form.get('reason') ?? '').trim();
+    if (!uuid(effortId) || !['invalid', 'move', 'restore'].includes(action))
+      return fail(400, { message: 'Choose what to correct.', ok: false });
+    if (action === 'move' && !uuid(riderId))
+      return fail(400, { message: 'Choose the rider who actually rode.', ok: false });
+    if (action !== 'restore' && !reason)
+      return fail(400, { message: 'Give a short reason, so others know why.', ok: false });
+    if (reason.length > 200)
+      return fail(400, { message: 'Keep the reason to 200 characters.', ok: false });
+    const { error: problem } = await client.rpc('correct_effort', {
+      p_effort_id: effortId,
+      p_action: action,
+      p_rider_id: action === 'move' ? riderId : null,
+      p_reason: reason || null
+    });
+    if (problem) return fail(400, { message: correctionError(problem.code), ok: false });
+    redirect(303, `/sessions/${event.params.sessionId}?corrected=1#results`);
   },
   finish: async (event) => {
     const { client } = requireUser(event);

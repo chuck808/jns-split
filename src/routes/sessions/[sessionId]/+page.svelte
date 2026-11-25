@@ -2,6 +2,8 @@
   import SessionFields from '#lib/components/SessionFields.svelte';
   import SessionParticipants from '#lib/components/SessionParticipants.svelte';
   import SessionResults from '#lib/components/SessionResults.svelte';
+  import CorrectionPanel from '#lib/components/CorrectionPanel.svelte';
+  import { page } from '$app/state';
   import { sessionDate, activityLabel } from '#lib/training-sessions';
   import Button from '#lib/ui/Button.svelte';
   import Card from '#lib/ui/Card.svelte';
@@ -67,7 +69,18 @@
   </p>
 </Card>
 
-<SessionResults results={data.results} />
+<div id="results" class="results-block">
+  {#if page.url.searchParams.get('corrected')}
+    <p class="feedback" role="status">Correction saved. Bests and family views now use it.</p>
+  {/if}
+  {#if data.correction}
+    <CorrectionPanel panel={data.correction} closeHref={`/sessions/${session.id}#results`} />
+  {/if}
+  <SessionResults
+    results={data.results}
+    correctHref={(id) => `/sessions/${session.id}?correct=${id}#results`}
+  />
+</div>
 
 {#if data.detail.canManage && session.status === 'planned'}
   <Card title="Edit plan">
@@ -236,6 +249,12 @@
 </Card>
 
 <style>
+  .results-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    scroll-margin-top: 1rem;
+  }
   .chips,
   .row {
     display: flex;

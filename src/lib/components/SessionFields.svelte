@@ -85,6 +85,11 @@
   .span-2 {
     grid-column: span 2;
   }
+  .fields input[readonly] {
+    background: var(--raised);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
   @media (max-width: 640px) {
     .fields {
       grid-template-columns: minmax(0, 1fr);

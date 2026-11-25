@@ -168,6 +168,13 @@ test('results keep their own settings, sessions lock once results exist, and bes
       side.efforts.every((e: any) => !e.new_best),
       'later slower efforts are never marked'
     );
+    // The upload must lock the session row so an overlapping edit can't change its settings
+    // (migration 016). Real two-connection races are checked separately on PostgreSQL.
+    await db.exec('reset role');
+    const definition = await value(
+      "select pg_get_functiondef('public.record_effort(uuid,text,text,uuid,integer,text,text,integer)'::regprocedure)"
+    );
+    assert.match(definition, /from public\.training_sessions[^;]*for share/i);
   } finally {
     await db.close();
   }

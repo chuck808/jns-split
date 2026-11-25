@@ -75,6 +75,10 @@ Apply `supabase/migrations/202611250015_result_integrity.sql` the same way as 01
   change, so the session can never misdescribe its results. Its name, date and lane count still
   can. To ride a different setup, plan a new session.
 - Speeds and bests always use the distance and start type saved with each effort.
+- The lock is enforced by the database, not just the form. Migration 016
+  (`202611250016_config_lock_race.sql`, apply the same way) also covers an edit and the first
+  upload arriving at the same moment: one always waits for the other, so an effort is never saved
+  against settings that then change.
 - Bests, counts and "new best" marks are worked out over the whole session in the database. Only
   the list on screen is capped at the newest 500, and the page says so when it is.
 

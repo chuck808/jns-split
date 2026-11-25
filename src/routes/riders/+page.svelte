@@ -9,11 +9,27 @@
   import { SCOREBOARD_NAMES } from '#lib/rider-details';
   import { OUTCOME_LABELS, averageSpeed, groupLabel, seconds } from '#lib/results';
   import { formatTime } from '#lib/ui/format';
+  import ProgressChart from '#lib/components/ProgressChart.svelte';
+  import type { ProgressPoint } from '#lib/results';
   let { data, form } = $props();
   const ws = $derived(data.workspace);
   const rider = $derived(data.selected);
   const self = $derived(rider?.kind === 'rider');
   const latest = $derived(data.results?.efforts[0] ?? null);
+  // One chart per distance, start type and activity, most recently ridden first.
+  const progressGroups = $derived.by(() => {
+    const map = new Map<string, ProgressPoint[]>();
+    for (const p of data.results?.progress ?? []) {
+      const key = groupLabel(p);
+      map.set(key, [...(map.get(key) ?? []), p]);
+    }
+    return [...map.entries()].sort((a, b) =>
+      Math.max(...b[1].map((p) => Date.parse(p.day))) >
+      Math.max(...a[1].map((p) => Date.parse(p.day)))
+        ? 1
+        : -1
+    );
+  });
   let scoreboard = $derived(rider?.scoreboard_name ?? 'first_initial');
   const day = (value: string) =>
     new Date(value).toLocaleDateString('en-GB', {
@@ -144,6 +160,14 @@
             </section>
           {/if}
         </div>
+        {#if progressGroups.length}
+          <section class="progress" aria-label="Progress over time">
+            <span class="label">Progress</span>
+            {#each progressGroups as [label, points] (label)}
+              <ProgressChart {label} {points} />
+            {/each}
+          </section>
+        {/if}
         <details class="all">
           <summary>All efforts ({data.results?.efforts.length})</summary>
           <div class="table-wrap">
@@ -406,6 +430,12 @@
   }
   .all {
     margin-top: 1rem;
+  }
+  .progress {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
   }
   .table-wrap {
     overflow-x: auto;

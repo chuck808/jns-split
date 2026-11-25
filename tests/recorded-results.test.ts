@@ -219,6 +219,11 @@ test('recorded results: controller uploads, idempotency, demo separation and acc
       [[20, 'flying', 1390, 2]]
     );
     assert.equal(JSON.stringify(mine).includes('999'), false, 'demo results never reach families');
+    // Progress: one point per session (its best), Live efforts only.
+    assert.deepEqual(
+      mine.progress.map((p: any) => [p.session_name, p.best_ms, p.count]),
+      [['Tuesday sprints', 1390, 2]]
+    );
     await rejects('select rider_results($1)', [sam], '42501');
 
     // Revoked or expired credentials stop working; closed sessions take no more efforts.

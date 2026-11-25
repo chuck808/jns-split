@@ -24,6 +24,8 @@ test('results keep their own settings, sessions lock once results exist, and bes
       `create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema auth to authenticated,anon;`
     );
     await db.query("insert into auth.users values($1,'1@example.test',now())", [admin]);
+    const parent = '00000000-0000-0000-0000-000000000002';
+    await db.query("insert into auth.users values($1,'2@example.test',now())", [parent]);
     const files = (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort();
     const admissionAt = files.findIndex((f) => f.includes('club_admission'));
     for (const file of files.slice(0, admissionAt))
@@ -89,6 +91,22 @@ test('results keep their own settings, sessions lock once results exist, and bes
     );
     assert.equal(view.riders[0].best_today, 1405);
     assert.equal(view.total, 6);
+
+    // Progress for a linked guardian: one point per session (its best), oldest first, no demo.
+    const inv = await value("select invite_rider_access($1,'2@example.test','guardian',true)", [
+      alex
+    ]);
+    await as(parent);
+    await db.query('select respond_rider_invitation($1,true)', [inv]);
+    const progress = (await value('select rider_results($1)', [alex])).progress;
+    assert.deepEqual(
+      progress.map((p: any) => [p.session_name, p.best_ms, p.count]),
+      [
+        ['Last week', 1420, 1],
+        ['Today', 1405, 4]
+      ]
+    );
+    await as(admin);
 
     // 1. Distance, start type and activity are locked once results exist; name still changes.
     const version = () => value('select version from training_sessions where id=$1', [today]);

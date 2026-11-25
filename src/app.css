@@ -650,6 +650,8 @@ h3 {
   --accent-soft: #22300e;
   --accent-edge: #3f5418;
   --accent-text: #d8f76f;
+  /* Chart line: validated (lightness band, chroma, 3:1) against this theme's surface. */
+  --series-1: #7fab14;
   --info-soft: #173049;
   --info-text: #9fd0ff;
   --warn: #ffc83d;
@@ -678,6 +680,7 @@ h3 {
   --accent-soft: #eef8d2;
   --accent-edge: #9cba49;
   --accent-text: #2f4a00;
+  --series-1: #5d8a00;
   --info-soft: #e3efff;
   --info-text: #1d4f91;
   --warn: #b37a00;
@@ -707,6 +710,7 @@ h3 {
     --accent-soft: #eef8d2;
     --accent-edge: #9cba49;
     --accent-text: #2f4a00;
+    --series-1: #5d8a00;
     --info-soft: #e3efff;
     --info-text: #1d4f91;
     --warn: #b37a00;

@@ -100,3 +100,19 @@ of every effort. Faster times are drawn higher, so an improving rider's line ris
   chart and use the left and right arrow keys; screen readers announce each session.
 - **Show as a table** under each chart gives the same figures as a table.
 - Demo results and coach notes never appear.
+
+## Correcting results (migration 019)
+
+Apply `supabase/migrations/202611250019_effort_corrections.sql` the same way. On a session page,
+each result has a **Correct** link:
+
+- **Mark invalid**, for example a false start or a hand breaking the beam. The time stays listed,
+  struck through, but never counts towards bests, new-best marks, previous bests or progress charts.
+- **Move to another rider**, for a tag mix-up. Only riders on the session's list, or who rode in it,
+  can be chosen. The effort then counts for that rider everywhere, including their family's view.
+- **Restore the original**, which undoes the corrections.
+
+The measured result itself is never edited or deleted. Each correction is a separate record with who
+made it, when and why, shown as the effort's history and recorded in the club history. Session
+coaches and club admins can correct, including after the session is closed. Families see an
+invalid effort as "Invalid" but never the reason.

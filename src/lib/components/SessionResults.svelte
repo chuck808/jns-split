@@ -11,7 +11,11 @@
     seconds,
     type SessionResultsData
   } from '#lib/results';
-  let { results }: { results: SessionResultsData | null } = $props();
+  /** correctHref: when set, each row links to its correction panel. */
+  let {
+    results,
+    correctHref
+  }: { results: SessionResultsData | null; correctHref?: (effortId: string) => string } = $props();
   const efforts = $derived(results?.efforts ?? null);
   const anyDemo = $derived(!!efforts?.some((e) => e.is_test));
   const newest = $derived(efforts ? [...efforts].reverse() : []);
@@ -80,6 +84,7 @@
             <th scope="col">Rider</th>
             <th scope="col" class="num">Time</th>
             <th scope="col" class="num wide">Avg km/h</th>
+            {#if correctHref}<th scope="col"><span class="sr-only">Correct</span></th>{/if}
           </tr>
         </thead>
         <tbody>
@@ -90,16 +95,36 @@
               <td>
                 {e.rider_name}
                 {#if e.is_test}<StatusChip tone="warn">Demo</StatusChip>{/if}
+                {#if e.original_rider_name}<span class="effort-note">
+                    Moved from {e.original_rider_name}
+                  </span>{/if}
+                {#if e.corrected && e.correction_reason}<span class="effort-note">
+                    Corrected: {e.correction_reason}
+                  </span>{/if}
                 {#if e.note}<span class="effort-note">Note: {e.note}</span>{/if}
               </td>
               <td class="num">
-                {e.outcome === 'completed'
-                  ? `${formatTime(seconds(e.elapsed_ms))}s`
-                  : OUTCOME_LABELS[e.outcome]}
+                {#if e.outcome === 'invalid' && e.corrected && e.elapsed_ms !== null}
+                  <s>{formatTime(seconds(e.elapsed_ms))}s</s>
+                  <span class="effort-note">Invalid</span>
+                {:else}
+                  {e.outcome === 'completed'
+                    ? `${formatTime(seconds(e.elapsed_ms))}s`
+                    : OUTCOME_LABELS[e.outcome]}
+                {/if}
               </td>
               <td class="num wide">
                 {e.outcome === 'completed' ? averageSpeed(e.distance_metres, e.elapsed_ms) : '—'}
               </td>
+              {#if correctHref}<td>
+                  <a
+                    class="correct-link"
+                    href={correctHref(e.id)}
+                    aria-label={`Correct ${e.rider_name}'s effort at ${clock(e.recorded_at)}`}
+                  >
+                    Correct
+                  </a>
+                </td>{/if}
             </tr>
           {/each}
         </tbody>
@@ -187,6 +212,20 @@
     td {
       white-space: normal;
     }
+  }
+  .correct-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    font-size: 0.875rem;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .effort-note {
     display: block;

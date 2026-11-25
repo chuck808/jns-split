@@ -300,8 +300,8 @@
                       type="button"
                       class="cell-button"
                       onclick={() => openNote(c.id, c.note)}
-                      title={`Lane ${c.lane}${c.newBest ? ' · new best' : ''}${c.is_test ? ' · demo' : ''}${c.note ? ` · note: ${c.note}` : ' · add a note'}`}
-                      aria-label={`${row.name}, effort ${i + 1}, ${c.outcome === 'completed' ? time(c.elapsed_ms) + ' seconds' : OUTCOME_LABELS[c.outcome]}${c.newBest ? ', new best' : ''}${c.is_test ? ', demo' : ''}${c.note ? ', has a note. Edit note' : '. Add a note'}`}
+                      title={`Lane ${c.lane}${c.newBest ? ' · new best' : ''}${c.is_test ? ' · demo' : ''}${c.corrected ? ` · corrected: ${c.correction_reason ?? ''}` : ''}${c.note ? ` · note: ${c.note}` : ' · add a note'}`}
+                      aria-label={`${row.name}, effort ${i + 1}, ${c.outcome === 'completed' ? time(c.elapsed_ms) + ' seconds' : OUTCOME_LABELS[c.outcome]}${c.newBest ? ', new best' : ''}${c.is_test ? ', demo' : ''}${c.corrected ? ', corrected' : ''}${c.note ? ', has a note. Edit note' : '. Add a note'}`}
                     >
                       {c.outcome === 'completed' ? time(c.elapsed_ms) : short[c.outcome]}
                       {#if c.note}<span class="note-dot" aria-hidden="true"></span>{/if}

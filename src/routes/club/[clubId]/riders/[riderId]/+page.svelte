@@ -198,7 +198,111 @@
   </Card>
 </div>
 
+<div class="data-card" id="data">
+  <Card title="Data and erasure">
+    <div class="two">
+      <section class="stack">
+        <h3>Full record for a data request</h3>
+        <p class="note">
+          Everything held about {rider.display_name}, including coaches’ notes, correction reasons
+          and who has access. Check it before sending it to a family, and remove anything you’re
+          entitled to keep back. Each download is recorded in the club history.
+        </p>
+        <form method="POST" action={`/club/${data.club.id}/riders/${rider.id}/export`}>
+          <Button type="submit">Download full record</Button>
+        </form>
+        <p class="note">Families can download what they see themselves, from Riders and family.</p>
+      </section>
+
+      <section class="stack">
+        <h3>Erasure</h3>
+        {#if data.erasureRequest}
+          <p class="notice stacked">
+            <strong>{data.erasureRequest.requested_by}</strong> asked for this rider’s data to be
+            erased on {date(data.erasureRequest.created_at)}{data.erasureRequest.message
+              ? `: “${data.erasureRequest.message}”`
+              : '.'}
+          </p>
+          <details>
+            <summary>Decline, with a reason</summary>
+            <form method="POST" action="?/declineErasure" class="stack">
+              <input type="hidden" name="requestId" value={data.erasureRequest.id} />
+              <label>
+                Reason the family will see<textarea name="reason" required maxlength="500" rows="2"
+                ></textarea>
+              </label>
+              <div><Button type="submit">Decline request</Button></div>
+            </form>
+          </details>
+        {/if}
+        {#if data.mentions === null}
+          <p class="note">
+            Erasing deletes {rider.display_name}’s details, results, notes and family access for
+            good, and leaves “Removed rider” in the club history.
+          </p>
+          <div>
+            <Button href={`?erase=1#data`} variant="danger">Start erasing…</Button>
+          </div>
+        {:else}
+          {#if data.mentions.length}
+            <div class="notice stacked">
+              <p>
+                <strong>Check these first.</strong> They’re about other riders but mention
+                {rider.display_name}’s name, so erasure won’t change them. Edit them if they should
+                go.
+              </p>
+              <ul class="list">
+                {#each data.mentions as m, i (i)}
+                  <li>
+                    <span>“{m.text}”</span>
+                    <span class="note">
+                      {m.kind} · about {m.about}{m.session ? ` · ${m.session}` : ''}
+                    </span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {:else}
+            <p class="note">No notes or requests about other riders mention this name.</p>
+          {/if}
+          <form method="POST" action="?/erase" class="stack">
+            <label>
+              Type <strong>{rider.display_name}</strong> to confirm<input
+                name="confirmName"
+                required
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="understand" value="yes" required />I understand this
+              permanently deletes this rider’s details, results, notes and family access. It can’t
+              be undone.
+            </label>
+            <div class="actions">
+              <Button type="submit" variant="danger">Erase rider data</Button>
+              <Button href={`/club/${data.club.id}/riders/${rider.id}#data`} variant="quiet">
+                Cancel
+              </Button>
+            </div>
+          </form>
+        {/if}
+      </section>
+    </div>
+  </Card>
+</div>
+
 <style>
+  .notice.stacked {
+    display: block;
+  }
+  .notice.stacked p {
+    margin: 0 0 0.5rem;
+  }
+  .data-card {
+    margin-top: 1rem;
+    scroll-margin-top: 1rem;
+  }
   .two {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

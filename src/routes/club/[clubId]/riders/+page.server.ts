@@ -44,12 +44,19 @@ export const load: PageServerLoad = async (event) => {
   const corrections = await client.rpc('club_correction_requests', {
     p_club_id: event.params.clubId
   });
+  // Before migration 020 this comes back empty.
+  const erasures = await client.rpc('club_erasure_requests', { p_club_id: event.params.clubId });
   return {
     ...roster,
     fieldValues: roster.fieldValues ?? [],
     filters,
     riderSettings,
-    corrections: (corrections.error ? [] : corrections.data) as CorrectionSummary[]
+    corrections: (corrections.error ? [] : corrections.data) as CorrectionSummary[],
+    erasures: (erasures.error ? [] : erasures.data) as {
+      id: string;
+      rider_id: string;
+      display_name: string;
+    }[]
   };
 };
 export const actions: Actions = {

@@ -21,7 +21,13 @@ export const load: PageServerLoad = async (event) => {
     const r = await client.rpc('rider_results', { p_rider_id: selected.rider_id });
     if (!r.error) results = r.data as RiderResults;
   }
-  return { workspace, selected, results };
+  let erasure: { status: string; created_at: string; decline_reason: string | null } | null = null;
+  if (selected) {
+    // Before migration 020 there's simply no request to show.
+    const q = await client.rpc('my_erasure_request', { p_rider_id: selected.rider_id });
+    if (!q.error) erasure = q.data;
+  }
+  return { workspace, selected, results, erasure };
 };
 
 export const actions: Actions = {
@@ -72,6 +78,35 @@ export const actions: Actions = {
     });
     if (error) return fail(400, { message: familyError(error.code), ok: false });
     return { message: 'Sent to the club. They’ll make the change.', ok: true };
+  },
+  erasure: async (event) => {
+    const { client } = requireUser(event);
+    const form = await event.request.formData();
+    const id = String(form.get('riderId') ?? '');
+    const message = String(form.get('message') ?? '').trim();
+    if (!uuid(id) || form.get('understand') !== 'yes')
+      return fail(400, {
+        message: 'Tick that you understand what erasure means before sending.',
+        ok: false
+      });
+    if (message.length > 500)
+      return fail(400, { message: 'Keep the message to 500 characters.', ok: false });
+    const { error } = await client.rpc('request_rider_erasure', {
+      p_rider_id: id,
+      p_message: message || null
+    });
+    if (error)
+      return fail(400, {
+        message:
+          error.code === '23505'
+            ? 'You’ve already asked. The club will be in touch.'
+            : familyError(error.code),
+        ok: false
+      });
+    return {
+      message: 'Request sent. A club admin will check it and erase the data, or tell you why not.',
+      ok: true
+    };
   },
   leave: async (event) => {
     const { client } = requireUser(event);

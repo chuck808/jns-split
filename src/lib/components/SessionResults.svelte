@@ -7,19 +7,30 @@
   import {
     OUTCOME_LABELS,
     averageSpeed,
+    groupLabel,
     seconds,
-    sessionBests,
-    type SessionEffort
+    type SessionResultsData
   } from '#lib/results';
-  let { efforts, distance }: { efforts: SessionEffort[] | null; distance: number } = $props();
-  const bests = $derived(efforts ? sessionBests(efforts) : []);
+  let { results }: { results: SessionResultsData | null } = $props();
+  const efforts = $derived(results?.efforts ?? null);
   const anyDemo = $derived(!!efforts?.some((e) => e.is_test));
   const newest = $derived(efforts ? [...efforts].reverse() : []);
+  // Bests come from the database over the whole session, grouped by the distance and start
+  // type each effort was actually ridden at.
+  const groups = $derived.by(() => {
+    const map = new Map<string, SessionResultsData['bests']>();
+    for (const b of results?.bests ?? []) {
+      const key = groupLabel(b);
+      map.set(key, [...(map.get(key) ?? []), b]);
+    }
+    return [...map.entries()];
+  });
   const clock = (value: string) =>
     new Date(value).toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      timeZone: 'Europe/London'
     });
 </script>
 
@@ -41,8 +52,8 @@
       </p>
     {/if}
 
-    {#if bests.length}
-      <h3>Best in this session</h3>
+    {#each groups as [label, bests] (label)}
+      <h3>Best in this session{groups.length > 1 ? ` · ${label}` : ''}</h3>
       <ol class="bests">
         {#each bests as b, i (b.rider_id)}
           <li>
@@ -53,9 +64,13 @@
           </li>
         {/each}
       </ol>
-    {/if}
+    {/each}
 
-    <h3>Every effort, newest first</h3>
+    <h3>
+      {results && results.total > newest.length
+        ? `Latest ${newest.length} of ${results.total} efforts, newest first`
+        : 'Every effort, newest first'}
+    </h3>
     <div class="table-wrap">
       <table>
         <thead>
@@ -82,7 +97,7 @@
                   : OUTCOME_LABELS[e.outcome]}
               </td>
               <td class="num wide">
-                {e.outcome === 'completed' ? averageSpeed(distance, e.elapsed_ms) : '—'}
+                {e.outcome === 'completed' ? averageSpeed(e.distance_metres, e.elapsed_ms) : '—'}
               </td>
             </tr>
           {/each}
@@ -91,7 +106,8 @@
     </div>
     <p class="note">
       Times are as measured by the timing equipment and shown to the thousandth, never rounded up.
-      Average speed is over the whole distance, not a top speed.
+      Average speed is over the distance each effort was ridden at, not a top speed. Bests cover the
+      whole session.
     </p>
   {/if}
 </Card>

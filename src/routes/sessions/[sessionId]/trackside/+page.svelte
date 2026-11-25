@@ -235,6 +235,12 @@
         </tbody>
       </table>
     </div>
+    {#if snapshot.total > snapshot.efforts.length}
+      <p class="note">
+        Showing the latest {snapshot.efforts.length} of {snapshot.total} efforts. Best today, gaps and
+        new-best marks cover the whole session.
+      </p>
+    {/if}
     <ul class="legend">
       <li><span class="key best">1.390</span> New best</li>
       {#if anyDemo}<li>

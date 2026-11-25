@@ -67,13 +67,13 @@
   </p>
 </Card>
 
-<SessionResults efforts={data.results} distance={Number(session.distance_metres)} />
+<SessionResults results={data.results} />
 
 {#if data.detail.canManage && session.status === 'planned'}
   <Card title="Edit plan">
     <form method="POST" action="?/update" class="stack">
       <input type="hidden" name="version" value={session.version} />
-      <SessionFields {session} />
+      <SessionFields {session} locked={(data.results?.total ?? 0) > 0} />
       <div><Button type="submit" variant="primary">Save changes</Button></div>
     </form>
     <details>
@@ -120,19 +120,23 @@
         legend="Change type of session"
         name="activity"
         bind:value={activity}
-        disabled={data.participants.total > 0}
+        disabled={data.participants.total > 0 || (data.results?.total ?? 0) > 0}
         options={[
           { value: 'coached', label: 'Coached session' },
           { value: 'free_ride', label: 'Open practice' }
         ]}
-        hint={data.participants.total > 0
-          ? 'Remove every rider from the list first. Riders are never removed automatically.'
-          : 'Start type and distance stay as they are.'}
+        hint={(data.results?.total ?? 0) > 0
+          ? 'Locked: results have been recorded for this session.'
+          : data.participants.total > 0
+            ? 'Remove every rider from the list first. Riders are never removed automatically.'
+            : 'Start type and distance stay as they are.'}
       />
       <div>
         <Button
           type="submit"
-          disabled={data.participants.total > 0 || activity === session.activity}
+          disabled={data.participants.total > 0 ||
+            (data.results?.total ?? 0) > 0 ||
+            activity === session.activity}
         >
           Save type
         </Button>

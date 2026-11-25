@@ -2,7 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireUser } from '#lib/server/access';
 import { uuid, type ClubCoaches } from '#lib/coaches';
-import type { SessionEffort } from '#lib/results';
+import type { SessionResultsData } from '#lib/results';
 import {
   participantFilters,
   participantError,
@@ -71,7 +71,7 @@ export const load: PageServerLoad = async (event) => {
   return {
     detail,
     directory,
-    results: (results.error ? null : results.data) as SessionEffort[] | null,
+    results: (results.error ? null : results.data) as SessionResultsData | null,
     participants: participantResult.data as ParticipantPage,
     candidates,
     participantFilters: filters
@@ -181,7 +181,7 @@ export const actions: Actions = {
       p_status: status
     });
     if (problem) return fail(400, { message: sessionError(problem.code), ok: false });
-    return { message: `Session ${status}. No measured results were created.`, ok: true };
+    return { message: `Session ${status}. It takes no more results.`, ok: true };
   },
   assign: async (event) => {
     const { client } = requireUser(event);

@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { TrainingSession } from '#lib/training-sessions';
   import ChoiceGroup from '#lib/ui/ChoiceGroup.svelte';
-  let { session }: { session?: TrainingSession } = $props();
+  /** locked: results are recorded, so distance and start type can't change. */
+  let { session, locked = false }: { session?: TrainingSession; locked?: boolean } = $props();
   // Writable deriveds: follow the saved session, and can be changed locally.
   let mode = $derived(session?.start_mode ?? 'standing');
   let lanes = $derived(String(session?.lane_count ?? 4));
@@ -34,19 +35,25 @@
       inputmode="decimal"
       value={session?.distance_metres ?? 20}
       required
+      readonly={locked}
+      aria-describedby={locked ? 'locked-note' : undefined}
     />
   </label>
+  {#if locked}<input type="hidden" name="mode" value={mode} />{/if}
   <ChoiceGroup
     legend="Start type"
-    name="mode"
+    name={locked ? 'mode-locked' : 'mode'}
     bind:value={mode}
+    disabled={locked}
     options={[
       { value: 'standing', label: 'Standing' },
       { value: 'flying', label: 'Flying' }
     ]}
-    hint={mode === 'flying'
-      ? 'Time starts when the rider crosses the start beam.'
-      : 'Time starts from the countdown at each start post.'}
+    hint={locked
+      ? 'Locked: results have been recorded at this setting.'
+      : mode === 'flying'
+        ? 'Time starts when the rider crosses the start beam.'
+        : 'Time starts from the countdown at each start post.'}
   />
   <ChoiceGroup
     legend="Lanes"
@@ -55,6 +62,10 @@
     options={['1', '2', '3', '4'].map((n) => ({ value: n, label: n }))}
   />
 </div>
+{#if locked}<p class="caption" id="locked-note">
+    Results have been recorded, so distance and start type are locked. Plan a new session to ride a
+    different setup.
+  </p>{/if}
 <p class="caption">
   Times are in UTC for now. Saving creates a plan — nothing is sent to equipment.
 </p>

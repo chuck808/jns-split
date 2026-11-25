@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { onDestroy, tick } from 'svelte';
   import { connectReader } from '#lib/serial';
   import { parseScan } from '#lib/session';
@@ -102,6 +103,26 @@
 />
 
 {#if form?.message}<p class="feedback" class:error={!form.ok} role="status">{form.message}</p>{/if}
+{#if page.url.searchParams.get('erased')}
+  <p class="feedback" role="status">
+    The rider’s data was erased. They now show as “Removed rider” in the club history.
+  </p>
+{/if}
+{#if data.erasures.length}
+  <p class="notice" role="status">
+    <strong>
+      {data.erasures.length === 1
+        ? '1 erasure request'
+        : `${data.erasures.length} erasure requests`}
+    </strong>
+    from families:
+    {#each data.erasures as r, i (r.id)}
+      {i ? ', ' : ''}<a href={`/club/${data.club.id}/riders/${r.rider_id}#data`}>
+        {r.display_name}
+      </a>
+    {/each}
+  </p>
+{/if}
 {#if data.corrections.length}
   <p class="notice corrections" role="status">
     <strong>

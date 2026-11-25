@@ -17,6 +17,10 @@ export const faqs = [
     a: 'No. Riders carry a small tag and tap in at their lane. Families can choose to follow their own rider’s times, but nobody needs an account to ride.'
   },
   {
+    q: 'Can families see or remove their data?',
+    a: 'Yes. A linked parent, guardian or rider can download what the app holds about them, and ask the club to erase it. The club checks each request and either erases the data or explains why it needs to keep something.'
+  },
+  {
     q: 'How accurate is the timing?',
     a: 'We’ll publish figures once we’ve measured them properly at a real track. Until then we won’t make claims we can’t back up.'
   }

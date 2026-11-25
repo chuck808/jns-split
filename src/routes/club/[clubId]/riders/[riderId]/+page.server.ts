@@ -1,4 +1,4 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireAdmin } from '#lib/server/access';
 import { emailAddress, uuid } from '#lib/coaches';
@@ -10,6 +10,22 @@ async function admin(event: RequestEvent) {
   if (!uuid(event.params.riderId)) error(404, 'Rider not found.');
   return client;
 }
+interface ErasureRequest {
+  id: string;
+  rider_id: string;
+  display_name: string;
+  message: string | null;
+  created_at: string;
+  requested_by: string;
+}
+interface Mention {
+  kind: string;
+  text: string;
+  session: string | null;
+  about: string;
+  at: string;
+}
+
 async function emailInvite(
   event: RequestEvent,
   client: Awaited<ReturnType<typeof admin>>,
@@ -37,7 +53,24 @@ export const load: PageServerLoad = async (event) => {
   if (problem?.code === '42501') error(404, 'Rider not found.');
   if (problem)
     error(503, 'Unable to load family access. Apply the family access migration (012) first.');
-  return { access: data as RiderAccess, emailOn: !!event.locals.mailer };
+  // Before migration 020 these come back empty.
+  const requests = await client.rpc('club_erasure_requests', { p_club_id: event.params.clubId });
+  const erasureRequest =
+    ((requests.error ? [] : requests.data) as ErasureRequest[]).find(
+      (r) => r.rider_id === event.params.riderId
+    ) ?? null;
+  // ?erase=1 opens the erase step, which checks other riders' notes for this name.
+  let mentions: Mention[] | null = null;
+  if (event.url.searchParams.get('erase')) {
+    const m = await client.rpc('erasure_mentions', { p_rider_id: event.params.riderId });
+    mentions = m.error ? null : m.data;
+  }
+  return {
+    access: data as RiderAccess,
+    emailOn: !!event.locals.mailer,
+    erasureRequest,
+    mentions
+  };
 };
 
 export const actions: Actions = {
@@ -106,6 +139,43 @@ export const actions: Actions = {
       message: 'Access removed. Their account and any other riders linked to them are unchanged.',
       ok: true
     };
+  },
+  declineErasure: async (event) => {
+    const client = await admin(event);
+    const form = await event.request.formData();
+    const id = String(form.get('requestId') ?? '');
+    const reason = String(form.get('reason') ?? '').trim();
+    if (!uuid(id) || !reason || reason.length > 500)
+      return fail(400, {
+        message: 'Give the family a short reason (up to 500 characters).',
+        ok: false
+      });
+    const { error: problem } = await client.rpc('decline_rider_erasure', {
+      p_request_id: id,
+      p_reason: reason
+    });
+    if (problem) return fail(400, { message: familyError(problem.code), ok: false });
+    return { message: 'Request declined. The family can see your reason.', ok: true };
+  },
+  erase: async (event) => {
+    const client = await admin(event);
+    const form = await event.request.formData();
+    const name = String(form.get('confirmName') ?? '');
+    if (form.get('understand') !== 'yes')
+      return fail(400, { message: 'Tick that you understand erasure can’t be undone.', ok: false });
+    const { error: problem } = await client.rpc('erase_rider', {
+      p_rider_id: event.params.riderId,
+      p_confirm_name: name
+    });
+    if (problem)
+      return fail(400, {
+        message:
+          problem.code === '22023'
+            ? 'The name doesn’t match exactly, or this rider has already been erased. Nothing was changed.'
+            : familyError(problem.code),
+        ok: false
+      });
+    redirect(303, `/club/${event.params.clubId}/riders?erased=1`);
   },
   resolve: async (event) => {
     const client = await admin(event);

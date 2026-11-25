@@ -269,6 +269,62 @@
     </Card>
   </div>
 
+  <Card title="Your data">
+    <div class="data-rights">
+      <section>
+        <h3>Download</h3>
+        <p class="note">
+          A file with everything this page shows about {rider.display_name}: details, results and
+          your requests. It’s in JSON, a format other apps and spreadsheets can read.
+        </p>
+        <div>
+          <Button href={`/riders/${rider.rider_id}/export`} download>Download data</Button>
+        </div>
+        <p class="note">
+          The club may hold more, such as coaches’ notes. Ask the club for a full copy if you want
+          it.
+        </p>
+      </section>
+      <section>
+        <h3>Erasure</h3>
+        {#if data.erasure?.status === 'pending'}
+          <p>
+            You asked the club to erase {rider.display_name}’s data on {day(
+              data.erasure.created_at
+            )}. A club admin will do it or tell you why not.
+          </p>
+        {:else}
+          {#if data.erasure?.status === 'declined'}
+            <p class="notice">
+              The club declined your last request: “{data.erasure.decline_reason}”. You can ask
+              again, or contact the club.
+            </p>
+          {/if}
+          <details>
+            <summary>Ask the club to erase {rider.display_name}’s data</summary>
+            <form method="POST" action="?/erasure" class="stack">
+              <input type="hidden" name="riderId" value={rider.rider_id} />
+              <p class="note">
+                If the club agrees, it deletes {rider.display_name}’s details and results for good,
+                and removes everyone’s access, including yours. It can’t be undone. The club may
+                need to keep some records and will tell you if so.
+              </p>
+              <label>
+                Message to the club (optional)<textarea name="message" maxlength="500" rows="2"
+                ></textarea>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="understand" value="yes" required />I understand this
+                deletes the results permanently.
+              </label>
+              <div><Button type="submit" variant="danger">Send erasure request</Button></div>
+            </form>
+          </details>
+        {/if}
+      </section>
+    </div>
+  </Card>
+
   <details class="leave">
     <summary>Stop seeing {rider.display_name}</summary>
     <form method="POST" action="?/leave" class="stack">
@@ -459,6 +515,28 @@
   .num {
     text-align: right;
     font-variant-numeric: tabular-nums;
+  }
+  .data-rights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+  .data-rights section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .data-rights h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  .data-rights p {
+    margin: 0;
+  }
+  @media (max-width: 760px) {
+    .data-rights {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
   .leave {
     margin-top: 1.5rem;
